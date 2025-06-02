@@ -1,12 +1,18 @@
 import http from 'http';
+import Router from './common/router/index.js';
+import userRouter from './routes/user.route.js';
 
 /**
  * Create a new application server
  *
- * - TODO: Routing
  * - TODO: Middleware
  */
 export function createApplicationServer() {
+    const router = new Router();
+
+    // Register the routes to the router
+    router.use(userRouter);
+
     return http.createServer();
 }
 
@@ -15,6 +21,16 @@ export function createApplicationServer() {
  * @param {number} port
  */
 export function runApplicationServer(port) {
-    const server = createApplicationServer();
-    server.listen(port, () => console.log(`Server is Running on PORT ${port}!`));
+    return new Promise((resolve, reject) => {
+        try {
+            const server = createApplicationServer();
+
+            server.listen(port, () => {
+                console.log(`🏃 Server is Running on PORT ${port}! 🏃`);
+                resolve();
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
