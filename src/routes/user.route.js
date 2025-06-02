@@ -10,4 +10,18 @@ userRouter.post('/users', (req, res) => {
     userController.postUser(req, res);
 });
 
+/**
+ * Find all users.
+ */
+userRouter.get('/users', (req, res) => {
+    userController.getUser(req, res);
+});
+
+/**
+ * Find a user by id.
+ */
+userRouter.get('/users/:id', (req, res) => {
+    userController.getUserById(req, res);
+});
+
 export default userRouter;

@@ -13,7 +13,12 @@ export function createApplicationServer() {
     // Register the routes to the router
     router.use(userRouter);
 
-    return http.createServer();
+    const server = http.createServer((req, res) => {
+        // TODO: 핸들러에서 발생한 에러에 대한 Handling 추가 필요!
+        router.handleRequest(req, res);
+    });
+
+    return server;
 }
 
 /**
