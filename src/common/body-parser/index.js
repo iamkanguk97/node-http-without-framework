@@ -1,3 +1,5 @@
+import { getContentType } from '../../utils/router.util.js';
+
 class BodyParser {
   constructor() {
     this.options = {
@@ -10,9 +12,10 @@ class BodyParser {
         'application/json',
         'application/x-www-form-urlencoded',
         'text/plain',
+        'text/html',
         'multipart/form-data'
-      ]
-    }
+      ],
+    };
   }
 
   /**
@@ -63,14 +66,86 @@ class BodyParser {
    * @param {string} contentType 
    * @returns {Object}
    */
-  parseRequestBody(rawBody, contentType) {}
+  parseRequestBody(rawBody, contentType) {
+    if (!rawBody) {
+      return {};
+    }
 
+    switch (contentType) {
+      case 'application/json':
+          return this.parseJsonBody(rawBody);
+      case 'application/x-www-form-urlencoded':
+          return this.parseUrlEncodedBody(rawBody);
+      case 'text/html':
+      case 'text/plain':
+          return this.parseTextBody(rawBody);
+      case 'multipart/form-data':
+          return this.parseMultipartFormData(rawBody);
+      default:
+          return this.parseTextBody(rawBody);
+    }
+  }
 
-  parse() {}
-  parseJsonBody() {}
-  parseUrlEncodedBody() {}
-  parseTextBody() {}
-  parseMultipartFormData() {}
+  /**
+   * Parse the request body from the request
+   * @param {http.IncomingMessage} req
+   * @param {http.ServerResponse} res
+   */
+  async parse(req, res) {
+    try {
+      const rawRequestBody = await this.getRequestBody(req);
+      const contentType = getContentType(req);
+
+      req.body = this.parseRequestBody(rawRequestBody, contentType);
+      req.rawBody = rawRequestBody;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } 
+  }
+
+  /**
+   * Parse the raw request-body as JSON
+   * @param {string} rawBody
+   * @returns {Object}
+   */
+  parseJsonBody(rawBody) {
+    try {
+      return JSON.parse(rawBody);
+    } catch (error) {
+      throw new Error('Invalid JSON body');
+    }
+  }
+
+  /**
+   * Parse the raw request-body as URL encoded
+   * @param {string} rawBody
+   * @returns {Object}
+   */
+  parseUrlEncodedBody(rawBody) {
+    try {
+      const params = new URLSearchParams(rawBody);
+      const result = {};
+
+      return rawBody;
+    } catch (error) {
+      throw new Error('Invalid URL encoded body');
+    }
+  }
+
+  /**
+   * Parse the raw request-body as text
+   * @param {string} rawBody
+   * @returns {string}
+   */
+  parseTextBody(rawBody) {
+    return rawBody;
+  }
+
+  // TODO
+  parseMultipartFormData(rawBody) {
+    return rawBody;
+  }
 }
 
 export default BodyParser;

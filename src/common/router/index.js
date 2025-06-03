@@ -100,8 +100,10 @@ class Router {
 
     // Parse the request-body for HTTP POST, PUT, PATCH methods
     if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      console.log('POST!!!');
-      console.log(await this.bodyParser.getRequestBody(req));
+      await this.bodyParser.parse(req, res);
+    } else {
+      req.body = {};
+      req.rawBody = '';
     }
 
     /**
