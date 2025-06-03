@@ -6,6 +6,8 @@ import userRouter from './routes/user.route.js';
  * Create a new application server
  *
  * - TODO: Middleware
+ * 
+ * @returns {http.Server}
  */
 export function createApplicationServer() {
     const router = new Router();
@@ -13,9 +15,9 @@ export function createApplicationServer() {
     // Register the routes to the router
     router.use(userRouter);
 
-    const server = http.createServer((req, res) => {
+    const server = http.createServer(async (req, res) => {
         // TODO: 핸들러에서 발생한 에러에 대한 Handling 추가 필요!
-        router.handleRequest(req, res);
+        await router.handleRequest(req, res);
     });
 
     return server;
@@ -24,6 +26,7 @@ export function createApplicationServer() {
 /**
  * Run the created application server
  * @param {number} port
+ * @returns {Promise}
  */
 export function runApplicationServer(port) {
     return new Promise((resolve, reject) => {

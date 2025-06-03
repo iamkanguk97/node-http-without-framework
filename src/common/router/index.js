@@ -1,4 +1,5 @@
 import url from 'url';
+import BodyParser from '../body-parser/index.js';
 import { getPathSegmentList } from '../../utils/router.util.js';
 
 class Router {
@@ -10,6 +11,8 @@ class Router {
       DELETE: new Map(),
       PATCH: new Map()
     };
+
+    this.bodyParser = new BodyParser();
   }
 
   /**
@@ -84,7 +87,7 @@ class Router {
    * @param {*} req
    * @param {*} res
    */
-  handleRequest(req, res) {
+  async handleRequest(req, res) {
     const { method } = req;
 
     // Parse the request url
@@ -94,6 +97,12 @@ class Router {
     // Set the query-parameter and path-variable(default) into the request object
     req.query = parsedUrl.query;
     req.params = {};
+
+    // Parse the request-body for HTTP POST, PUT, PATCH methods
+    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+      console.log('POST!!!');
+      console.log(await this.bodyParser.getRequestBody(req));
+    }
 
     /**
      * Match the request path with routing map
