@@ -8,6 +8,7 @@ class Router {
       POST: new Map(),
       PUT: new Map(),
       DELETE: new Map(),
+      PATCH: new Map()
     };
   }
 
@@ -48,6 +49,16 @@ class Router {
    */
   delete(path, handler) {
     this.routes.DELETE.set(path, handler);
+    return this;
+  }
+
+  /**
+   * HTTP PATCH Method Handler
+   * @param {string} path
+   * @param {Function} handler
+   */
+  patch(path, handler) {
+    this.routes.PATCH.set(path, handler);
     return this;
   }
 
