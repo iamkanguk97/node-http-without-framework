@@ -1,130 +1,180 @@
 import url from 'url';
+import { getPathSegmentList } from '../../utils/router.util.js';
 
 class Router {
-    constructor() {
-        this.routes = {
-            GET: new Map(),
-            POST: new Map(),
-            PUT: new Map(),
-            DELETE: new Map()
-        };
-    }
+  constructor() {
+    this.routes = {
+      GET: new Map(),
+      POST: new Map(),
+      PUT: new Map(),
+      DELETE: new Map(),
+    };
+  }
+
+  /**
+   * HTTP GET Method Handler
+   * @param {string} path
+   * @param {Function} handler
+   */
+  get(path, handler) {
+    this.routes.GET.set(path, handler);
+    return this;
+  }
+
+  /**
+   * HTTP POST Method Handler
+   * @param {string} path
+   * @param {Function} handler
+   */
+  post(path, handler) {
+    this.routes.POST.set(path, handler);
+    return this;
+  }
+
+  /**
+   * HTTP PUT Method Handler
+   * @param {string} path
+   * @param {Function} handler
+   */
+  put(path, handler) {
+    this.routes.PUT.set(path, handler);
+    return this;
+  }
+
+  /**
+   * HTTP DELETE Method Handler
+   * @param {string} path
+   * @param {Function} handler
+   */
+  delete(path, handler) {
+    this.routes.DELETE.set(path, handler);
+    return this;
+  }
+
+  /**
+   * Register the routes to the router
+   * @param {Router} router
+   */
+  use(router) {
+    Object.keys(this.routes).forEach((method) => {
+      const inputRouterMethod = router.routes[method];
+
+      for (const path of inputRouterMethod.keys()) {
+        const handler = inputRouterMethod.get(path);
+        this.routes[method].set(path, handler);
+      }
+    });
+
+    return this;
+  }
+
+  /**
+   * Handle the request object (routing handler)
+   * @param {*} req
+   * @param {*} res
+   */
+  handleRequest(req, res) {
+    const { method } = req;
+
+    // Parse the request url
+    const parsedUrl = url.parse(req.url, true);
+    const pathName = parsedUrl.pathname;
+
+    // Set the query-parameter and path-variable(default) into the request object
+    req.query = parsedUrl.query;
+    req.params = {};
 
     /**
-     * HTTP GET Method Handler
-     * @param {string} path
-     * @param {Function} handler
+     * Match the request path with routing map
+     * Get the path-variable from the request path
      */
-    get(path, handler) {
-        this.routes.GET.set(path, handler);
-        return this;
+    const searchRouteResult = this.searchRoute(method, pathName);
+
+    if (searchRouteResult) {
+      const { params, handlerFunc } = searchRouteResult;
+      req.params = params;
+
+      // Execute the handler function
+      handlerFunc(req, res);
+    }
+  }
+
+  /**
+   * Search the route from the routing table
+   * @param {string} method
+   * @param {string} pathName
+   * @returns {Object | null} { params, handlerFunc }
+   */
+  searchRoute(method, pathName) {
+    const matchedRouteByMethod = this.routes[method];
+
+    // TODO: Error Handling 추가 필요!
+    if (!matchedRouteByMethod) {
+      throw new Error('Route를 찾지 못했습니다!');
     }
 
-    /**
-     * HTTP POST Method Handler
-     * @param {string} path
-     * @param {Function} handler
-     */
-    post(path, handler) {
-        this.routes.POST.set(path, handler);
-        return this;
+    // HTTP Request Method and Path are matched
+    if (matchedRouteByMethod.has(pathName)) {
+      return {
+        params: {},
+        handlerFunc: matchedRouteByMethod.get(pathName),
+      };
     }
 
-    /**
-     * HTTP PUT Method Handler
-     * @param {string} path
-     * @param {Function} handler
-     */
-    put(path, handler) {
-        this.routes.PUT.set(path, handler);
-        return this;
-    }
+    // Match the dynamic route - path-variable (ex. /users/:id)
+    return this.matchDynamicRoute(matchedRouteByMethod, pathName);
+  }
 
-    /**
-     * HTTP DELETE Method Handler
-     * @param {string} path
-     * @param {Function} handler
-     */
-    delete(path, handler) {
-        this.routes.DELETE.set(path, handler);
-        return this;
-    }
+  /**
+   * Match with dynamic route
+   * @param {Map} routeMap
+   * @param {string} requestPathName
+   * @example /users/:id
+   * @returns {Object | null} { params, handlerFunc }
+   */
+  matchDynamicRoute(routeMap, requestPathName) {
+    const requestPathSegmentList = getPathSegmentList(requestPathName);
 
-    /**
-     * Register the routes to the router
-     * @param {Router} router
-     */
-    use(router) {
-        Object.keys(this.routes).forEach(method => {
-            const inputRouterMethod = router.routes[method];
+    for (const [routePathName, handlerFunc] of routeMap) {
+      const routePathSegmentList = getPathSegmentList(routePathName);
 
-            for (const path of inputRouterMethod.keys()) {
-                const handler = inputRouterMethod.get(path);
-                this.routes[method].set(path, handler);
-            }
-        });
+      const params = {};
+      let isNotMatched = false;
 
-        return this;
-    }
+      /**
+       * - 세그먼트 개수가 다른 경우 매칭 불가
+       * - TODO: Question-Mark를 활용해서 Optional 기능 추가?
+       */
+      if (requestPathSegmentList.length !== routePathSegmentList.length) {
+        isNotMatched = true;
+        continue;
+      }
 
-    /**
-     * Handle the request object (routing handler)
-     * @param {*} req
-     * @param {*} res
-     */
-    handleRequest(req, res) {
-        const { method } = req;
+      for (let i = 0; i < routePathSegmentList.length; i++) {
+        const routePathSegment = routePathSegmentList[i];
+        const requestPathSegment = requestPathSegmentList[i];
 
-        const parsedUrl = url.parse(req.url, true);
-        const pathName = parsedUrl.pathname;
-
-        // Set the query-parameter and path-variable into the request object
-        req.query = parsedUrl.query;
-        req.params = {};
-
-        this.searchRoute(method, pathName);
-    }
-
-    /**
-     * Search the route from the routing table
-     * @param {string} method
-     * @param {string} pathName
-     */
-    searchRoute(method, pathName) {
-        const matchedRouteByMethod = this.routes[method];
-        console.log(matchedRouteByMethod);
-        console.log(pathName);
-
-        // TODO: Error Handling 추가 필요!
-        if (!matchedRouteByMethod) {
-            throw new Error('Route를 찾지 못했습니다!');
+        if (routePathSegment.startsWith(':')) {
+            const paramName = routePathSegment.slice(1);
+            params[paramName] = requestPathSegment;   // Register the path-variable into the params object
         }
-
-        // Query-Parameter 설정
-
-        // 메서드와 경로 모두 일치하는 경우
-        if (matchedRouteByMethod.has(pathName)) {
-            const handler = matchedRouteByMethod.get(pathName);
-            // executeHandler
-            return;
+        else if (routePathSegment !== requestPathSegment) {
+            isNotMatched = true;
+            break;
         }
+      }
 
-        // 동적 라우팅 매칭
-        this.matchDynamicRoute(matchedRouteByMethod, pathName);
+      // If matched, return the handler function and params
+      if (!isNotMatched) {
+        return {
+            params,
+            handlerFunc
+        }
+      }
     }
 
-    /**
-     * Match with dynamic route
-     * @example /users/:id
-     */
-    matchDynamicRoute(routeMap, pathName) {
-        console.log(routeMap, pathName);
-
-        for (const [routePath, handlerFunc] of routeMap) {
-            console.log(routePath);
-            console.log(handlerFunc);
-        }
-    }
+    return null;
+  }
 }
 
 export default Router;
