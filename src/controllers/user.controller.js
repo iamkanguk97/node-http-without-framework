@@ -1,20 +1,29 @@
 'use strict';
 
+import { userService } from '../services/user.service.js';
+
 class UserController {
-    constructor() {}
+    constructor(userService) {
+        this.userService = userService;
+    }
 
     /**
      * Create a new user controller
      * @param {} req
      * @param {*} res
      */
-    postUser(req, res) {
-        console.log(req.body);
+    async postUser(req, res) {
+        const { email, password, nickName } = req.body;
 
-        // Request-Body Validation
+        // Validation
+        const result = await this.userService.createUser({
+            email,
+            password,
+            nickName
+        });
 
         res.end('Hello World!');
     }
 }
 
-export const userController = new UserController();
+export const userController = new UserController(userService);

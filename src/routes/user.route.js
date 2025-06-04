@@ -6,8 +6,8 @@ const userRouter = new Router();
 /**
  * Create a new user.
  */
-userRouter.post('/users', (req, res) => {
-    userController.postUser(req, res);
+userRouter.post('/users', async (req, res) => {
+    await userController.postUser(req, res);
 });
 
 /**
