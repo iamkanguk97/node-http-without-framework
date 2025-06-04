@@ -1,3 +1,5 @@
+'use strict';
+
 import http from 'http';
 import Router from './common/router/index.js';
 import userRouter from './routes/user.route.js';
@@ -6,7 +8,7 @@ import userRouter from './routes/user.route.js';
  * Create a new application server
  *
  * - TODO: Middleware
- * 
+ *
  * @returns {http.Server}
  */
 export function createApplicationServer() {

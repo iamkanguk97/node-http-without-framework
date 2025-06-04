@@ -1,3 +1,5 @@
+'use strict';
+
 class UserController {
     constructor() {}
 
@@ -7,6 +9,10 @@ class UserController {
      * @param {*} res
      */
     postUser(req, res) {
+        console.log(req.body);
+
+        // Request-Body Validation
+
         res.end('Hello World!');
     }
 }
