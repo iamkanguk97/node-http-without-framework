@@ -1,5 +1,5 @@
 import { ensureDirectoryExists, fileExists, createJsonFile, getJsFiles } from '../utils/file.util.js';
-import { getDataDirectoryPath, getDomainsDirectoryPath, getDataFilePath } from '../utils/schema.util.js';
+import { getDataDirectoryPath, getDomainsDirectoryPath, getDataFilePath } from '../utils/schema/schema.util.js';
 
 /**
  * 데이터 초기화 서비스

@@ -11,3 +11,12 @@ export const SIZE_UNITS = {
     ZB: 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
     YB: 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024
 };
+
+// JavaScript type units
+export const JAVASCRIPT_TYPE_UNITS = {
+    STRING: 'string',
+    NUMBER: 'number',
+    BOOLEAN: 'boolean',
+    NULL: 'null',
+    UNDEFINED: 'undefined'
+};

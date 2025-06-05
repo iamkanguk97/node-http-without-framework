@@ -30,16 +30,16 @@ export function schemaNameToDataFileName(schemaName) {
 }
 
 /**
- * 데이터 디렉토리 경로를 가져옵니다.
- * @returns {string} 데이터 디렉토리 절대 경로
+ * Get the data directory path
+ * @returns {string} The absolute path of the data directory
  */
 export function getDataDirectoryPath() {
     return path.resolve(process.cwd(), 'data');
 }
 
 /**
- * 도메인 디렉토리 경로를 가져옵니다.
- * @returns {string} 도메인 디렉토리 절대 경로
+ * Get the schema directory path
+ * @returns {string} The absolute path of the schema directory
  */
 export function getDomainsDirectoryPath() {
     return path.resolve(process.cwd(), 'src', 'domains');

@@ -1,11 +1,13 @@
-import fs from 'fs';
+'use strict';
+
+import { promises as fs } from 'fs';
 import path from 'path';
 
 /**
  * 디렉토리가 존재하지 않으면 생성합니다.
  * @param {string} dirPath - 생성할 디렉토리 경로
  */
-export function ensureDirectoryExists(dirPath) {
+export async function ensureDirectoryExists(dirPath) {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
         console.log(`📁 Created directory: ${dirPath}`);

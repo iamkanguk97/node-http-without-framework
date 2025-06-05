@@ -6,22 +6,21 @@ const userRouter = new Router();
 /**
  * Create a new user.
  */
-userRouter.post('/users', async (req, res) => {
-    await userController.postUser(req, res);
-});
+userRouter.post('/users', userController.postUser);
 
 /**
  * Find all users.
  */
-userRouter.get('/users', (req, res) => {
-    userController.getUser(req, res);
-});
+userRouter.get('/users', userController.getUserList);
 
 /**
  * Find a user by id.
  */
-userRouter.get('/users/:id', (req, res) => {
-    userController.getUserById(req, res);
-});
+userRouter.get('/users/:id', userController.getUserById);
+
+/**
+ * Check the nickname is already exists or not.
+ */
+userRouter.get('/users/nicknames', userController.checkNickname);
 
 export default userRouter;
