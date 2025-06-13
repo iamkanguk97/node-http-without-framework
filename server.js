@@ -1,12 +1,13 @@
 import { runApplicationServer } from './src/app.js';
 import { appConfig } from './src/configs/app.config.js';
-import DataInitializationService from './src/services/data-initialization.service.js';
+import DataInitializationUtil from './src/utils/data-initialize/data-initialize.util.js';
 
 async function bootstrap() {
     try {
         // 데이터 초기화 실행
-        const dataInitService = new DataInitializationService();
-        await dataInitService.initialize();
+        // const dataInitService = new DataInitializationService();
+        const dataInitUtil = new DataInitializationUtil();
+        await dataInitUtil.initialize();
 
         // 서버 시작
         const { APP_PORT } = appConfig;

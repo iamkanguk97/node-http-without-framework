@@ -1,4 +1,21 @@
 import path from 'path';
+import { getPathWithLayers } from '../file.util';
+
+/**
+ * Get the domain directory path
+ * @returns {string} The absolute path of the domain directory
+ */
+export function getDomainDirectoryPath() {
+    return getPathWithLayers('src', 'domains');
+}
+
+/**
+ * Get the data directory path
+ * @returns {string} The absolute path of the data directory
+ */
+export function getDataDirectoryPath() {
+    return getPathWithLayers('data');
+}
 
 /**
  * 스키마 이름을 데이터 파일 이름으로 변환합니다.
@@ -27,22 +44,6 @@ export function schemaNameToDataFileName(schemaName) {
     }
 
     return `${pluralName}.json`;
-}
-
-/**
- * Get the data directory path
- * @returns {string} The absolute path of the data directory
- */
-export function getDataDirectoryPath() {
-    return path.resolve(process.cwd(), 'data');
-}
-
-/**
- * Get the schema directory path
- * @returns {string} The absolute path of the schema directory
- */
-export function getDomainsDirectoryPath() {
-    return path.resolve(process.cwd(), 'src', 'domains');
 }
 
 /**

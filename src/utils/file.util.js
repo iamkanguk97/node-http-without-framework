@@ -4,14 +4,26 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 /**
- * 디렉토리가 존재하지 않으면 생성합니다.
- * @param {string} dirPath - 생성할 디렉토리 경로
+ * Check if file or directory exists
+ * @param {string} path - Path to check
+ * @returns {boolean} True if file or directory exists, false otherwise
  */
-export async function ensureDirectoryExists(dirPath) {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-        console.log(`📁 Created directory: ${dirPath}`);
+export async function isFileOrDirExist(path) {
+    try {
+        await fs.access(path);
+        return true;
+    } catch (error) {
+        return false;
     }
+}
+
+/**
+ * Get path with layers
+ * @param {...string} args - Path layers
+ * @returns {string} Path with layers
+ */
+export function getPathWithLayers(...args) {
+    return path.resolve(process.cwd(), ...args);
 }
 
 /**
