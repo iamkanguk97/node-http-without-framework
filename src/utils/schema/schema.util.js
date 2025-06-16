@@ -1,11 +1,14 @@
+'use strict';
+
 import path from 'path';
-import { getPathWithLayers } from '../file.util';
+import { getPathWithLayers, isFileOrDirExist } from '../file.util.js';
+import { promises as fs } from 'fs';
 
 /**
  * Get the domain directory path
  * @returns {string} The absolute path of the domain directory
  */
-export function getDomainDirectoryPath() {
+export function getSchemaRootDirectoryPath() {
     return getPathWithLayers('src', 'domains');
 }
 
@@ -13,46 +16,55 @@ export function getDomainDirectoryPath() {
  * Get the data directory path
  * @returns {string} The absolute path of the data directory
  */
-export function getDataDirectoryPath() {
+export function getDatabaseDirectoryPath() {
     return getPathWithLayers('data');
 }
 
 /**
- * 스키마 이름을 데이터 파일 이름으로 변환합니다.
- * 예: User -> users.json, Post -> posts.json
- * @param {string} schemaName - 스키마 이름
- * @returns {string} 데이터 파일 이름
+ * Get schema files
+ * @returns {Promise<string[]>} schema files
  */
-export function schemaNameToDataFileName(schemaName) {
-    // 첫 글자를 소문자로 변환하고 복수형으로 만들기
-    const lowerCaseName = schemaName.charAt(0).toLowerCase() + schemaName.slice(1);
+export async function getSchemaFiles() {
+    const domainRootDirPath = getSchemaRootDirectoryPath();
 
-    // 간단한 복수형 변환 (영어 기준)
-    let pluralName;
-    if (lowerCaseName.endsWith('y')) {
-        pluralName = lowerCaseName.slice(0, -1) + 'ies';
-    } else if (
-        lowerCaseName.endsWith('s') ||
-        lowerCaseName.endsWith('sh') ||
-        lowerCaseName.endsWith('ch') ||
-        lowerCaseName.endsWith('x') ||
-        lowerCaseName.endsWith('z')
-    ) {
-        pluralName = lowerCaseName + 'es';
-    } else {
-        pluralName = lowerCaseName + 's';
+    try {
+        return await fs.readdir(domainRootDirPath);
+    } catch (error) {
+        return [];
     }
-
-    return `${pluralName}.json`;
 }
 
 /**
- * 스키마 이름에 대응하는 데이터 파일의 전체 경로를 가져옵니다.
- * @param {string} schemaName - 스키마 이름
- * @returns {string} 데이터 파일 전체 경로
+ * Get the schema name from path
+ * @param {string} schemaFilePath 
+ * @returns {string}
  */
-export function getDataFilePath(schemaName) {
-    const dataDir = getDataDirectoryPath();
-    const fileName = schemaNameToDataFileName(schemaName);
-    return path.join(dataDir, fileName);
+export function getSchemaNameFromPath(schemaFilePath) {
+    return schemaFilePath.split('.')[0];
+}
+
+/**
+ * Set the database file name with schema name
+ * @param {string} schemaName 
+ * @returns {string}
+ */
+export function setDatabaseFileName(schemaName) {
+    return `${schemaName}.json`;
+}
+
+/**
+ * Create database file from schema file
+ * @param {string} databaseDirPath
+ * @param {string} schemaFilePath
+ */
+export async function createDatabaseFile(databaseDirPath, schemaFilePath) {
+    const schemaName = getSchemaNameFromPath(schemaFilePath);
+    const databaseFileName = setDatabaseFileName(schemaName);
+
+    const databaseFilePath = path.join(databaseDirPath, databaseFileName);
+    const isDatabaseFileExist = await isFileOrDirExist(databaseFilePath);
+    
+    if (!isDatabaseFileExist) {
+        await fs.writeFile(databaseFilePath, '[]', 'utf8');
+    }
 }

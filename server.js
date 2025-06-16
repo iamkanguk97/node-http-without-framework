@@ -4,12 +4,9 @@ import DataInitializationUtil from './src/utils/data-initialize/data-initialize.
 
 async function bootstrap() {
     try {
-        // 데이터 초기화 실행
-        // const dataInitService = new DataInitializationService();
         const dataInitUtil = new DataInitializationUtil();
         await dataInitUtil.initialize();
-
-        // 서버 시작
+        
         const { APP_PORT } = appConfig;
         await runApplicationServer(APP_PORT);
 
@@ -21,4 +18,4 @@ async function bootstrap() {
     }
 }
 
-bootstrap();
+await bootstrap();

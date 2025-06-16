@@ -1,16 +1,41 @@
-import { getPathWithLayers } from '../file.util.js';
+'use strict';
+
+import { createDir } from "../file.util.js";
+import {
+  createDatabaseFile,
+  getDatabaseDirectoryPath,
+  getSchemaFiles,
+} from '../schema/schema.util.js';
 
 class DataInitializationUtil {
     /**
-     * data 디렉토리 생성
-     * domains 디렉토리 스키마 파일 스캔
-     * 각 스키마에 대응하는 데이터 파일 생성 (없는 경우)
+     * Initialize the database status
      */
     async initialize() {
-        console.log('🚀 Starting data initialization...');
+        try {
+            console.log('🚀 Starting data initialization...');
 
-        const dataPath = getPathWithLayers('data');
-        console.log(dataPath);
+            const databaseDirPath = getDatabaseDirectoryPath();
+            await createDir(databaseDirPath);
+
+            await this.syncApplicationWithSchemaFiles(databaseDirPath);
+
+            console.log('✅ Data initialization completed successfully!');
+        } catch (error) {
+            console.error('❌ Error during data initialization:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Match the sync with schema files
+     */
+    async syncApplicationWithSchemaFiles(databaseDirPath) {
+        const schemaFilePathList = await getSchemaFiles();
+
+        for (const schemaFilePath of schemaFilePathList) {
+            await createDatabaseFile(databaseDirPath, schemaFilePath);
+        }
     }
 }
 
