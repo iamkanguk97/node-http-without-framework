@@ -1,3 +1,5 @@
+'use strict';
+
 import { runApplicationServer } from './src/app.js';
 import { appConfig } from './src/configs/app.config.js';
 import DataInitializationUtil from './src/utils/data-initialize/data-initialize.util.js';

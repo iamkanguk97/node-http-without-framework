@@ -1,3 +1,5 @@
+'use strict';
+
 import REGEX from '../regex/index.js';
 import { JAVASCRIPT_TYPE_UNITS } from '../constants/unit.constant.js';
 

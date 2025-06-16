@@ -1,3 +1,5 @@
+'use strict';
+
 class User {
     /**
      * id: string | 고유ID (UUID) (PK)

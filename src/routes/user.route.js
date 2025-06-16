@@ -1,3 +1,5 @@
+'use strict';
+
 import Router from '../common/router/index.js';
 import { userController } from '../controllers/user.controller.js';
 
