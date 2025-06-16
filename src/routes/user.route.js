@@ -23,6 +23,11 @@ userRouter.get('/users/:id', userController.getUserById);
 /**
  * Check the nickname is already exists or not.
  */
-userRouter.get('/users/nicknames', userController.checkNickname);
+userRouter.get('/users/check-nickname', userController.getUserCheckNickName);
+
+/**
+ * Check the email is already exists or not.
+ */
+userRouter.get('/users/check-email', userController.getUserCheckEmail);
 
 export default userRouter;

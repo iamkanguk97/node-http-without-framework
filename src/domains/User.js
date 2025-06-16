@@ -1,6 +1,10 @@
 'use strict';
 
-class User {
+import { promises as fs } from 'fs';
+import { __dirname } from '../utils/path.util.js';
+import path from 'path';
+
+export class User {
     /**
      * id: string | 고유ID (UUID) (PK)
      * displayId: string | 표시용 ID (예: D0000001) (UNIQUE)
@@ -26,8 +30,17 @@ class User {
         // this.updatedAt = data.updatedAt;
         // this.deletedAt = data.deletedAt;
 
-        Object.assign(this, data);
+        Object.assign(this, {
+            ...data,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            deletedAt: null
+        });
+    }
+
+    static from(data) {
+        // validation
+
+        return new User(data);
     }
 }
-
-export default User;
