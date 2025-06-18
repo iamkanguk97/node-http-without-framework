@@ -39,8 +39,18 @@ export class User {
     }
 
     static from(data) {
-        // validation
-
         return new User(data);
+    }
+
+    static to(user) {
+        return {
+            id: user.id,
+            displayId: user.displayId,
+            emailAddress: user.emailAddress,
+            emailDomain: user.emailDomain,
+            nickName: user.nickName,
+            profileImageUrl: user.profileImageUrl,
+            createdAt: user.createdAt
+        };
     }
 }

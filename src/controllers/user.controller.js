@@ -1,100 +1,96 @@
 'use strict';
 
 import { userService } from '../services/user.service.js';
+import { validateEmail } from '../utils/validations/email.validation.js';
+import { validateNickname } from '../utils/validations/nickname.validation.js';
+import { validatePassword } from '../utils/validations/password.validation.js';
 
 class UserController {
-  
-  constructor(userService) {
-    this.userService = userService;
-  }
+    constructor(userService) {
+        this.userService = userService;
+    }
 
-  /**
-   * Create a new user controller
-   * @param {*} req
-   * @param {*} res
-   */
-  postUser = async (req, res) => {
-    const { email, password, nickName } = req.body;
+    postUser = async (req, res) => {
+        const { email, password, nickName } = req.body;
 
-    // Validation
+        validateEmail(email);
+        validateNickname(nickName);
+        validatePassword(password);
 
-    const result = await this.userService.createUser({
-      email,
-      password,
-      nickName,
-    });
+        const result = await this.userService.createUser({
+            email,
+            password,
+            nickName
+        });
 
-    console.log(result);
+        console.log(result);
 
-    res.end('hello!');
-  };
+        res.end('hello!');
+    };
 
-  /**
-   * Get all users controller
-   * @param {*} req
-   * @param {*} res
-   */
-  getUserList = async (req, res) => {
-    const result = await this.userService.findAll();
-    console.log(result);
+    /**
+     * Get all users controller
+     * @param {*} req
+     * @param {*} res
+     */
+    getUserList = async (req, res) => {
+        const result = await this.userService.findAll();
+        console.log(result);
 
-    res.end('Hello World!');
-  };
+        res.end('Hello World!');
+    };
 
-  /**
-   * Get a user by id controller
-   * @param {*} req
-   * @param {*} res
-   */
-  getUserById = async (req, res) => {
-    const { id } = req.params;
-    console.log(id);
+    getUserById = async (req, res) => {
+        const { id } = req.params;
+        console.log(id);
 
-    const result = await this.userService.findUserById(id);
-    console.log(result);
+        // Validation Check
 
-    res.end('Hello World!');
-  };
+        const result = await this.userService.findUserById(id);
+        console.log(result);
 
-  /**
-   * @Controller
-   * @description Check user nickname is duplicate or not.
-   * @param {*} req
-   * @param {*} res
-   * 
-   * @todo chunk 에러 해결필요!
-   */
-  getUserCheckNickName = async (req, res) => {
-    const { nickName } = req.query;
+        res.end('Hello World!');
+    };
 
-    // Validation Check
+    /**
+     * @Controller
+     * @description Check user nickname is duplicate or not.
+     * @param {*} req
+     * @param {*} res
+     *
+     * @todo chunk 에러 해결필요!
+     */
+    getUserCheckNickName = async (req, res) => {
+        const { nickName } = req.query;
 
-    await this.userService.checkIsDuplicateNickname(nickName);
+        // Validation Check
 
-    res.end({
-      isSuccess: true,
-      message: '사용 가능한 닉네임입니다.',
-    });
-  };
+        await this.userService.checkIsDuplicateNickname(nickName);
 
-  /**
-   * @Controller
-   * @description Check user email is duplicate or not.
-   * @param {*} req
-   * @param {*} res
-   */
-  getUserCheckEmail = async (req, res) => {
-    const { email } = req.query;
+        res.end({
+            isSuccess: true,
+            message: '사용 가능한 닉네임입니다.'
+        });
+    };
 
-    // Validation Check
+    /**
+     * @Controller
+     * @description Check user email is duplicate or not.
+     * @param {*} req
+     * @param {*} res
+     */
+    getUserCheckEmail = async (req, res) => {
+        const { email } = req.query;
 
-    await userService.checkIsDuplicateEmail(email);
+        // Validation Check
 
-    res.end({
-      isSuccess: true,
-      message: '사용 가능한 이메일입니다.',
-    });
-  };
+        await userService.checkIsDuplicateEmail(email);
+
+        res.end({
+            isSuccess: true,
+            message: '사용 가능한 이메일입니다.'
+        });
+    };
 }
 
 export const userController = new UserController(userService);

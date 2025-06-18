@@ -6,18 +6,15 @@ import { JAVASCRIPT_TYPE_UNITS } from '../constants/unit.constant.js';
 /**
  * User email validation
  * @param {string} email
- * @returns {Object} { isValid: boolean, message?: string }
  */
 export function validateEmail(email) {
-    if (!email) {
-        return { isValid: false, message: 'Email is Required!' };
-    }
-    if (typeof email !== JAVASCRIPT_TYPE_UNITS.STRING) {
-        return { isValid: false, message: 'Email must be a string!' };
-    }
-    if (!REGEX.EMAIL.test(email)) {
-        return { isValid: false, message: 'Invalid Email Format!' };
-    }
-
-    return { isValid: true };
+  if (!email) {
+    throw new Error('이메일을 입력해주세요!');
+  }
+  if (typeof email !== JAVASCRIPT_TYPE_UNITS.STRING) {
+    throw new Error('이메일은 문자열이어야 합니다!');
+  }
+  if (!REGEX.EMAIL.test(email)) {
+    throw new Error('이메일 형식이 올바르지 않습니다!');
+  }
 }
