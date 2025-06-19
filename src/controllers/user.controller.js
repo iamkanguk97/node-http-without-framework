@@ -4,6 +4,7 @@ import { userService } from '../services/user.service.js';
 import { validateEmail } from '../utils/validations/email.validation.js';
 import { validateNickname } from '../utils/validations/nickname.validation.js';
 import { validatePassword } from '../utils/validations/password.validation.js';
+import { UserCreateRequestDto } from '../dtos/user.dto.js';
 
 class UserController {
     constructor(userService) {
@@ -11,21 +12,22 @@ class UserController {
     }
 
     postUser = async (req, res) => {
-        const { email, password, nickName } = req.body;
+        try {
+            const { email, password, nickName } = req.body;
 
-        validateEmail(email);
-        validateNickname(nickName);
-        validatePassword(password);
+            validateEmail(email);
+            validateNickname(nickName);
+            validatePassword(password);
 
-        const result = await this.userService.createUser({
-            email,
-            password,
-            nickName
-        });
+            const createUserDto = new UserCreateRequestDto(email, password, nickName);
+            const result = await this.userService.createUser(createUserDto);
 
-        console.log(result);
-
-        res.end('hello!');
+            console.log(result);
+            res.end('hello!');
+        } catch (error) {
+            console.error(error);
+            throw new Error(error);
+        }
     };
 
     /**

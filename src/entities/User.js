@@ -1,10 +1,9 @@
 'use strict';
 
-import { promises as fs } from 'fs';
 import { __dirname } from '../utils/path.util.js';
-import path from 'path';
+import dayjs from 'dayjs';
 
-export class User {
+export class UserEntity {
     /**
      * id: string | 고유ID (UUID) (PK)
      * displayId: string | 표시용 ID (예: D0000001) (UNIQUE)
@@ -32,25 +31,44 @@ export class User {
 
         Object.assign(this, {
             ...data,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: dayjs(),
+            updatedAt: dayjs(),
             deletedAt: null
         });
     }
 
-    static from(data) {
-        return new User(data);
+    static fromJson(data) {
+        return new UserEntity(data);
     }
 
-    static to(user) {
+    toJson() {
         return {
-            id: user.id,
-            displayId: user.displayId,
-            emailAddress: user.emailAddress,
-            emailDomain: user.emailDomain,
-            nickName: user.nickName,
-            profileImageUrl: user.profileImageUrl,
-            createdAt: user.createdAt
+            id: this.id,
+            displayId: this.displayId,
+            emailAddress: this.emailAddress,
+            emailDomain: this.emailDomain,
+            nickName: this.nickName,
+            profileImageUrl: this.profileImageUrl,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
+            deletedAt: this.deletedAt
         };
+    }
+
+    static separateEmail(fullEmail) {
+        const separatedEmail = fullEmail.split('@');
+
+        if (separatedEmail.length !== 2) {
+            throw new Error('Invalid Email!');
+        }
+
+        return {
+            emailAddress: separatedEmail[0],
+            emailDomain: separatedEmail[1]
+        };
+    }
+
+    static async hashPassword(plainPassword) {
+        return await bcrypt.hash(plainPassword, 10);
     }
 }

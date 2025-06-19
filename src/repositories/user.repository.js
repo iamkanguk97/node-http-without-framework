@@ -3,6 +3,7 @@
 import { promises as fs } from 'fs';
 import { __dirname } from '../utils/path.util.js';
 import path from 'path';
+import { UserEntity } from '../entities/User.js';
 
 class UserRepository {
     constructor() {
@@ -16,27 +17,29 @@ class UserRepository {
     findAll = async () => {
         const userList = await fs.readFile(this.databaseFilePath, 'utf8');
         const parsedUserList = JSON.parse(userList);
-        return parsedUserList.map(User.to);
+        return parsedUserList.map(UserEntity.fromJson);
     };
 
     /**
      * @Repository
-     * @returns {Promise<User>}
+     * @returns {Promise<[]>}
      */
-    findById = async id => {
+    findById = async (id) => {
         const data = await fs.readFile(path.join(__dirname, '../../data/users.json'), 'utf8');
         const users = JSON.parse(data);
-        const user = users.find(user => user.id === id);
+        const user = users.find((user) => user.id === id);
         return user;
     };
 
-    create = async user => {
+    create = async (userEntity) => {
         const userList = await this.findAll();
-        userList.push(user);
+        userList.push(userEntity);
+        await this.save(userList.map((user) => user.toJson()));
+        return userEntity;
+    };
 
-        await fs.writeFile(this.databaseFilePath, 'utf8');
-
-        return user;
+    save = async (users) => {
+        await fs.writeFile(this.databaseFilePath, JSON.stringify(users, null, 2));
     };
 
     async create() {
@@ -57,9 +60,9 @@ class UserRepository {
      * @param {string} nickname
      * @returns {Promise<User>}
      */
-    findByNickname = async nickname => {
+    findByNickname = async (nickname) => {
         const userList = await this.findAll();
-        return userList.filter(user => user.nickname === nickname);
+        return userList.filter((user) => user.nickname === nickname);
     };
 
     /**
@@ -67,9 +70,9 @@ class UserRepository {
      * @param {string} email
      * @returns {Promise<User>}
      */
-    findByEmail = async email => {
+    findByEmail = async (email) => {
         const userList = await this.findAll();
-        return userList.filter(user => user.email === email);
+        return userList.filter((user) => user.email === email);
     };
 }
 

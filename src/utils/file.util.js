@@ -36,3 +36,12 @@ export async function isFileOrDirExist(path) {
 export function getPathWithLayers(...args) {
     return path.resolve(process.cwd(), ...args);
 }
+
+/**
+ * Read file with fs
+ * @param {string} path - Path to read
+ * @returns {Promise<string>} File content
+ */
+export async function readFileWithFs(path) {
+    return await fs.readFile(path, 'utf8');
+}
