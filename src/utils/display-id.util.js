@@ -139,3 +139,127 @@ export function extractNumberFromDisplayId(displayId) {
     const numberPart = displayId.replace(/^[A-Z]+/, '');
     return parseInt(numberPart, 10);
 }
+
+/**
+ * DisplayId 관련 유틸리티 함수들
+ */
+
+/**
+ * 16진수 DisplayId를 10진수로 변환합니다.
+ * @param {string} displayId - DisplayId (예: "U000000A")
+ * @param {string} prefix - 접두사 (기본값: "U")
+ * @returns {number} 10진수 값
+ */
+export function displayIdToDecimal(displayId, prefix = 'U') {
+    if (!displayId || typeof displayId !== 'string') {
+        throw new Error('유효하지 않은 DisplayId입니다.');
+    }
+
+    if (!displayId.startsWith(prefix)) {
+        throw new Error(`DisplayId는 ${prefix}로 시작해야 합니다.`);
+    }
+
+    const hexPart = displayId.slice(prefix.length);
+    const decimal = parseInt(hexPart, 16);
+
+    if (isNaN(decimal)) {
+        throw new Error('DisplayId의 16진수 부분이 유효하지 않습니다.');
+    }
+
+    return decimal;
+}
+
+/**
+ * 10진수를 DisplayId로 변환합니다.
+ * @param {number} decimal - 10진수 값
+ * @param {string} prefix - 접두사 (기본값: "U")
+ * @param {number} digits - 자릿수 (기본값: 7)
+ * @returns {string} DisplayId
+ */
+export function decimalToDisplayId(decimal, prefix = 'U', digits = 7) {
+    if (!Number.isInteger(decimal) || decimal < 0) {
+        throw new Error('10진수 값은 0 이상의 정수여야 합니다.');
+    }
+
+    const maxValue = Math.pow(16, digits) - 1;
+    if (decimal > maxValue) {
+        throw new Error(`값이 너무 큽니다. 최대값: ${maxValue}`);
+    }
+
+    const hexPart = decimal.toString(16).toUpperCase().padStart(digits, '0');
+    return `${prefix}${hexPart}`;
+}
+
+/**
+ * DisplayId 범위를 생성합니다.
+ * @param {string} startDisplayId - 시작 DisplayId
+ * @param {string} endDisplayId - 종료 DisplayId
+ * @param {string} prefix - 접두사 (기본값: "U")
+ * @returns {string[]} DisplayId 배열
+ */
+export function generateDisplayIdRange(startDisplayId, endDisplayId, prefix = 'U') {
+    const startDecimal = displayIdToDecimal(startDisplayId, prefix);
+    const endDecimal = displayIdToDecimal(endDisplayId, prefix);
+
+    if (startDecimal > endDecimal) {
+        throw new Error('시작 DisplayId가 종료 DisplayId보다 클 수 없습니다.');
+    }
+
+    const range = [];
+    const digits = startDisplayId.length - prefix.length;
+
+    for (let i = startDecimal; i <= endDecimal; i++) {
+        range.push(decimalToDisplayId(i, prefix, digits));
+    }
+
+    return range;
+}
+
+/**
+ * DisplayId가 유효한 범위 내에 있는지 확인합니다.
+ * @param {string} displayId - 확인할 DisplayId
+ * @param {string} minDisplayId - 최소 DisplayId
+ * @param {string} maxDisplayId - 최대 DisplayId
+ * @param {string} prefix - 접두사 (기본값: "U")
+ * @returns {boolean} 범위 내에 있는지 여부
+ */
+export function isDisplayIdInRange(displayId, minDisplayId, maxDisplayId, prefix = 'U') {
+    try {
+        const targetDecimal = displayIdToDecimal(displayId, prefix);
+        const minDecimal = displayIdToDecimal(minDisplayId, prefix);
+        const maxDecimal = displayIdToDecimal(maxDisplayId, prefix);
+
+        return targetDecimal >= minDecimal && targetDecimal <= maxDecimal;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * DisplayId 패턴을 검증합니다.
+ * @param {string} displayId - 검증할 DisplayId
+ * @param {string} prefix - 접두사 (기본값: "U")
+ * @param {number} digits - 자릿수 (기본값: 7)
+ * @returns {boolean} 유효한 패턴인지 여부
+ */
+export function validateDisplayIdPattern(displayId, prefix = 'U', digits = 7) {
+    if (!displayId || typeof displayId !== 'string') {
+        return false;
+    }
+
+    // 길이 체크
+    if (displayId.length !== prefix.length + digits) {
+        return false;
+    }
+
+    // 접두사 체크
+    if (!displayId.startsWith(prefix)) {
+        return false;
+    }
+
+    // 16진수 부분 체크
+    const hexPart = displayId.slice(prefix.length);
+    const hexRegex = /^[0-9A-F]+$/;
+
+    return hexRegex.test(hexPart);
+}

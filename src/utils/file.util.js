@@ -45,3 +45,13 @@ export function getPathWithLayers(...args) {
 export async function readFileWithFs(path) {
     return await fs.readFile(path, 'utf8');
 }
+
+/**
+ * Write json file with fs
+ * @param {string} path - Path to write
+ * @param {any} data - Data to write
+ * @returns {Promise<void>}
+ */
+export async function writeJsonFileWithFs(path, data) {
+    await fs.writeFile(path, JSON.stringify(data));
+}

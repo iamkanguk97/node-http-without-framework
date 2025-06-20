@@ -1,9 +1,10 @@
 'use strict';
 
+import path from 'path';
 import { promises as fs } from 'fs';
 import { __dirname } from '../utils/path.util.js';
-import path from 'path';
 import { UserEntity } from '../entities/User.js';
+import { readFileWithFs, writeJsonFileWithFs } from '../utils/file.util.js';
 
 class UserRepository {
     constructor() {
@@ -12,11 +13,11 @@ class UserRepository {
 
     /**
      * @Repository
-     * @returns {Promise<User[]>}
+     * @returns {Promise<UserEntity[]>}
      */
     findAll = async () => {
-        const userList = await fs.readFile(this.databaseFilePath, 'utf8');
-        const parsedUserList = JSON.parse(userList);
+        const rawUserList = await readFileWithFs(this.databaseFilePath);
+        const parsedUserList = JSON.parse(rawUserList);
         return parsedUserList.map(UserEntity.fromJson);
     };
 
@@ -31,6 +32,11 @@ class UserRepository {
         return user;
     };
 
+    /**
+     * @Repository
+     * @param {UserEntity} userEntity
+     * @returns {Promise<UserEntity>}
+     */
     create = async (userEntity) => {
         const userList = await this.findAll();
         userList.push(userEntity);
@@ -38,22 +44,14 @@ class UserRepository {
         return userEntity;
     };
 
+    /**
+     * @Repository
+     * @param {UserEntity[]} users
+     * @returns {Promise<void>}
+     */
     save = async (users) => {
-        await fs.writeFile(this.databaseFilePath, JSON.stringify(users, null, 2));
+        await writeJsonFileWithFs(this.databaseFilePath, users);
     };
-
-    async create() {
-        const data = await fs.readFile(path.join(__dirname(), '../../data/users.json'), 'utf8');
-        const users = JSON.parse(data);
-        users.push({
-            id: '1',
-            email: 'test@test.com',
-            password: '1234',
-            nickName: 'test'
-        });
-        await fs.writeFile(path.join(__dirname(), '../../data/users.json'), JSON.stringify(users, null, 2));
-        return users;
-    }
 
     /**
      * @Repository

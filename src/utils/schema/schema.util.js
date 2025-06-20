@@ -3,6 +3,7 @@
 import path from 'path';
 import { getPathWithLayers, isFileOrDirExist } from '../file.util.js';
 import { promises as fs } from 'fs';
+import { v7 } from 'uuid';
 
 /**
  * Get the domain directory path
@@ -36,7 +37,7 @@ export async function getSchemaFiles() {
 
 /**
  * Get the schema name from path
- * @param {string} schemaFilePath 
+ * @param {string} schemaFilePath
  * @returns {string}
  */
 export function getSchemaNameFromPath(schemaFilePath) {
@@ -45,7 +46,7 @@ export function getSchemaNameFromPath(schemaFilePath) {
 
 /**
  * Set the database file name with schema name
- * @param {string} schemaName 
+ * @param {string} schemaName
  * @returns {string}
  */
 export function setDatabaseFileName(schemaName) {
@@ -63,8 +64,16 @@ export async function createDatabaseFile(databaseDirPath, schemaFilePath) {
 
     const databaseFilePath = path.join(databaseDirPath, databaseFileName);
     const isDatabaseFileExist = await isFileOrDirExist(databaseFilePath);
-    
+
     if (!isDatabaseFileExist) {
         await fs.writeFile(databaseFilePath, '[]', 'utf8');
     }
+}
+
+/**
+ * Generate uuid v7
+ * @returns {string} uuid v7
+ */
+export function uuidv7() {
+    return v7();
 }

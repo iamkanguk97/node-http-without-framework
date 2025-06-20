@@ -2,6 +2,7 @@
 
 import { __dirname } from '../utils/path.util.js';
 import dayjs from 'dayjs';
+import bcrypt from 'bcrypt';
 
 export class UserEntity {
     /**

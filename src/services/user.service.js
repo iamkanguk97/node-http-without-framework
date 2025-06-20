@@ -2,9 +2,9 @@
 
 import { userRepository } from '../repositories/user.repository.js';
 import { DisplayIdEntity } from '../entities/DisplayId.js';
-import { v7 as uuidv7 } from 'uuid';
 import { UserEntity } from '../entities/User.js';
 import { UserCreateResponseDto } from '../dtos/user.dto.js';
+import { uuidv7 } from '../utils/schema/schema.util.js';
 import dayjs from 'dayjs';
 
 class UserService {
@@ -40,7 +40,8 @@ class UserService {
         const result = await this.userRepository.create(newUser);
         console.log(result);
 
-        // displayId 다음으로 설정
+        // DisplayId를 다음으로 설정
+        await DisplayIdEntity.setNextUserSeqDisplayId();
 
         return new UserCreateResponseDto(newUser.id, newUser.displayId, newUser.emailAddress, newUser.nickName);
     };
