@@ -13,6 +13,9 @@ import { errorHandlerMiddleware } from './common/middleware/error-handler.middle
 export function createApplicationServer() {
     const router = new Router();
 
+    // Set the global prefix path
+    router.setGlobalPrefixPath('/api');
+
     // Register the routes to the router
     router.use(userRouter);
 

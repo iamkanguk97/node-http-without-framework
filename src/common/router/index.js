@@ -7,7 +7,7 @@ import { HTTP_METHODS } from '../../utils/constants/http.constant.js';
 import { MethodNotAllowedException } from '../../exceptions/app.exception.js';
 
 class Router {
-    constructor() {
+    constructor(data) {
         this.routes = {
             GET: new Map(),
             POST: new Map(),
@@ -19,13 +19,19 @@ class Router {
         this.bodyParser = new BodyParser();
     }
 
+    getCombinedPath(path) {
+        console.log(this.globalPrefixPath);
+        console.log(path);
+        return `${this.globalPrefixPath}${path}`;
+    }
+
     /**
      * HTTP GET Method Handler
      * @param {string} path
      * @param {Function} handler
      */
     get(path, handler) {
-        this.routes.GET.set(path, handler);
+        this.routes.GET.set(this.globalPrefixPath + path, handler);
         return this;
     }
 
@@ -35,7 +41,7 @@ class Router {
      * @param {Function} handler
      */
     post(path, handler) {
-        this.routes.POST.set(path, handler);
+        this.routes.POST.set(this.globalPrefixPath + path, handler);
         return this;
     }
 
@@ -45,7 +51,7 @@ class Router {
      * @param {Function} handler
      */
     put(path, handler) {
-        this.routes.PUT.set(path, handler);
+        this.routes.PUT.set(this.globalPrefixPath + path, handler);
         return this;
     }
 
@@ -55,7 +61,7 @@ class Router {
      * @param {Function} handler
      */
     delete(path, handler) {
-        this.routes.DELETE.set(path, handler);
+        this.routes.DELETE.set(this.globalPrefixPath + path, handler);
         return this;
     }
 
@@ -65,7 +71,7 @@ class Router {
      * @param {Function} handler
      */
     patch(path, handler) {
-        this.routes.PATCH.set(path, handler);
+        this.routes.PATCH.set(this.globalPrefixPath + path, handler);
         return this;
     }
 
@@ -195,6 +201,11 @@ class Router {
         }
 
         return null;
+    }
+
+    setGlobalPrefixPath(globalPrefixPath) {
+        this.globalPrefixPath = globalPrefixPath;
+        return this;
     }
 }
 
