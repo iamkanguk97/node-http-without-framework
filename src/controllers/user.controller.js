@@ -12,22 +12,23 @@ class UserController {
     }
 
     postUser = async (req, res) => {
-        try {
-            const { email, password, nickName } = req.body;
+        const { email, password, nickName } = req.body;
 
-            validateEmail(email);
-            validateNickname(nickName);
-            validatePassword(password);
+        validateEmail(email);
+        validateNickname(nickName);
+        validatePassword(password);
 
-            const createUserDto = new UserCreateRequestDto(email, password, nickName);
-            const result = await this.userService.createUser(createUserDto);
+        const createUserDto = new UserCreateRequestDto(email, password, nickName);
+        const result = await this.userService.createUser(createUserDto);
 
-            console.log(result);
-            res.end('hello!');
-        } catch (error) {
-            console.error(error);
-            throw new Error(error);
-        }
+        res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+            JSON.stringify({
+                success: true,
+                data: result,
+                message: '사용자가 성공적으로 생성되었습니다.'
+            })
+        );
     };
 
     /**
@@ -37,21 +38,35 @@ class UserController {
      */
     getUserList = async (req, res) => {
         const result = await this.userService.findAll();
-        console.log(result);
 
-        res.end('Hello World!');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+            JSON.stringify({
+                success: true,
+                data: result,
+                message: '사용자 목록을 성공적으로 조회했습니다.'
+            })
+        );
     };
 
     getUserById = async (req, res) => {
         const { id } = req.params;
-        console.log(id);
 
         // Validation Check
+        if (!id) {
+            throw new Error('사용자 ID를 입력해주세요.');
+        }
 
         const result = await this.userService.findUserById(id);
-        console.log(result);
 
-        res.end('Hello World!');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+            JSON.stringify({
+                success: true,
+                data: result,
+                message: '사용자 정보를 성공적으로 조회했습니다.'
+            })
+        );
     };
 
     /**
@@ -59,20 +74,24 @@ class UserController {
      * @description Check user nickname is duplicate or not.
      * @param {*} req
      * @param {*} res
-     *
-     * @todo chunk 에러 해결필요!
      */
     getUserCheckNickName = async (req, res) => {
         const { nickName } = req.query;
 
         // Validation Check
+        if (!nickName) {
+            throw new Error('닉네임을 입력해주세요.');
+        }
 
         await this.userService.checkIsDuplicateNickname(nickName);
 
-        res.end({
-            isSuccess: true,
-            message: '사용 가능한 닉네임입니다.'
-        });
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+            JSON.stringify({
+                success: true,
+                message: '사용 가능한 닉네임입니다.'
+            })
+        );
     };
 
     /**
@@ -85,13 +104,19 @@ class UserController {
         const { email } = req.query;
 
         // Validation Check
+        if (!email) {
+            throw new Error('이메일을 입력해주세요.');
+        }
 
-        await userService.checkIsDuplicateEmail(email);
+        await this.userService.checkIsDuplicateEmail(email);
 
-        res.end({
-            isSuccess: true,
-            message: '사용 가능한 이메일입니다.'
-        });
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+            JSON.stringify({
+                success: true,
+                message: '사용 가능한 이메일입니다.'
+            })
+        );
     };
 }
 

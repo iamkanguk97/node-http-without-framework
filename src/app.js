@@ -3,11 +3,10 @@
 import http from 'http';
 import Router from './common/router/index.js';
 import userRouter from './routes/user.route.js';
+import { errorHandlerMiddleware } from './common/middleware/error-handler.middleware.js';
 
 /**
  * Create a new application server
- *
- * - TODO: Middleware
  *
  * @returns {http.Server}
  */
@@ -18,8 +17,14 @@ export function createApplicationServer() {
     router.use(userRouter);
 
     const server = http.createServer(async (req, res) => {
-        // TODO: 핸들러에서 발생한 에러에 대한 Handling 추가 필요!
-        await router.handleRequest(req, res);
+        try {
+            await router.handleRequest(req, res);
+        } catch (error) {
+            console.log('❌ 에러 발생 ❌');
+            console.error(error);
+
+            errorHandlerMiddleware.handleError(error, req, res);
+        }
     });
 
     return server;

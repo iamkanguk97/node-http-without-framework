@@ -4,6 +4,7 @@ import url from 'url';
 import BodyParser from '../body-parser/index.js';
 import { getPathSegmentList } from '../../utils/router.util.js';
 import { HTTP_METHODS } from '../../utils/constants/http.constant.js';
+import { MethodNotAllowedException } from '../../exceptions/app.exception.js';
 
 class Router {
     constructor() {
@@ -73,7 +74,7 @@ class Router {
      * @param {Router} router
      */
     use(router) {
-        Object.keys(this.routes).forEach(method => {
+        Object.keys(this.routes).forEach((method) => {
             const inputRouterMethod = router.routes[method];
 
             for (const path of inputRouterMethod.keys()) {
@@ -93,18 +94,12 @@ class Router {
     async handleRequest(req, res) {
         const { method } = req;
 
-        // Parse the request url
         const parsedUrl = url.parse(req.url, true);
         const pathName = parsedUrl.pathname;
 
-        // Set the query-parameter and path-variable(default) into the request object
         req.query = parsedUrl.query;
         req.params = {};
 
-        /**
-         * Match the request path with routing map
-         * Get the path-variable from the request path
-         */
         const searchRouteResult = this.searchRoute(method, pathName);
 
         if (searchRouteResult) {
@@ -136,9 +131,8 @@ class Router {
     searchRoute(method, pathName) {
         const matchedRouteByMethod = this.routes[method];
 
-        // TODO: Error Handling 추가 필요!
         if (!matchedRouteByMethod) {
-            throw new Error('Route를 찾지 못했습니다!');
+            throw new MethodNotAllowedException();
         }
 
         // HTTP Request Method and Path are matched
