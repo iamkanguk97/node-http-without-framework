@@ -1,12 +1,7 @@
 'use strict';
 
-/**
- * Get the path segment list from the path
- * @param {string} path
- * @returns {string[]}
- */
-export const getPathSegmentList = path => {
-    return path.split('/').filter(segment => segment !== '');
+export const getPathSegmentList = (path) => {
+    return path.split('/').filter((segment) => segment !== '');
 };
 
 /**
@@ -14,7 +9,7 @@ export const getPathSegmentList = path => {
  * @param {Object} req
  * @returns {string}
  */
-export const getFullContentType = req => {
+export const getFullContentType = (req) => {
     return req.headers['content-type'] || '';
 };
 
@@ -25,7 +20,7 @@ export const getFullContentType = req => {
  * @param {string} rawContentType
  * @returns {string}
  */
-export const getBaseContentType = rawContentType => {
+export const getBaseContentType = (rawContentType) => {
     return rawContentType.split(';')[0].trim().toLowerCase();
 };
 
@@ -34,7 +29,7 @@ export const getBaseContentType = rawContentType => {
  * @param {Object} req
  * @returns {string}
  */
-export const getContentType = req => {
+export const getContentType = (req) => {
     const contentType = req.headers['content-type'];
 
     if (!contentType) {

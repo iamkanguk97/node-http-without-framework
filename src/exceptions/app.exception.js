@@ -11,14 +11,14 @@ export class AppException extends Error {
 }
 
 export class NotFoundException extends AppException {
-    constructor(message) {
-        super(StatusCodes.NOT_FOUND, message);
+    constructor(errorInfo) {
+        super(StatusCodes.NOT_FOUND, errorInfo ?? ERROR_MESSAGE.NOT_FOUND);
     }
 }
 
 export class RouteNotFoundException extends NotFoundException {
-    constructor(message) {
-        super(StatusCodes.NOT_FOUND, message);
+    constructor() {
+        super(ERROR_MESSAGE.ROUTE_NOT_FOUND);
     }
 }
 

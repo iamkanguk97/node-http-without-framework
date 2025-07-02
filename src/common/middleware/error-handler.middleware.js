@@ -2,16 +2,9 @@
 
 import { StatusCodes } from 'http-status-codes';
 import { ERROR_MESSAGE } from '../../exceptions/ErrorMessage.js';
-import { appConfig } from '../../configs/app.config.js';
 import dayjs from 'dayjs';
 
 export class ErrorHandlerMiddleware {
-    /**
-     * Handling Error Response
-     * @param {Error} error
-     * @param {Request} req
-     * @param {Response} res
-     */
     handleError(error, req, res) {
         const statusCode = this.getStatusCodeFromResponse(error);
         const message = this.getMessageFromResponse(error);
@@ -24,10 +17,7 @@ export class ErrorHandlerMiddleware {
                 isSuccess: false,
                 error: {
                     message,
-                    responseCode,
-                    ...(appConfig.NODE_ENV === 'develop' && {
-                        stack: error.stack
-                    })
+                    responseCode
                 },
                 timestamp: dayjs(),
                 userAgent
