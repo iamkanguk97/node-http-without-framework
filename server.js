@@ -2,15 +2,12 @@
 
 import { runApplicationServer } from './src/app.js';
 import { appConfig } from './src/configs/app.config.js';
-import DataInitializationUtil from './src/utils/data-initialize/data-initialize.util.js';
+import DataInitializationFactory from './src/utils/data-initialize/index.js';
 
 async function bootstrap() {
     try {
-        const dataInitUtil = new DataInitializationUtil();
-        await dataInitUtil.initialize();
-        
-        const { APP_PORT } = appConfig;
-        await runApplicationServer(APP_PORT);
+        await new DataInitializationFactory().initialize();
+        await runApplicationServer(appConfig.APP_PORT);
 
         console.log('✅ Server started successfully! ✅');
     } catch (error) {
