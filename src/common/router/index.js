@@ -2,12 +2,18 @@
 
 import url from 'url';
 import BodyParser from '../body-parser/index.js';
+import REGEX from '../../utils/regex/index.js';
 import { getPathSegmentList } from '../../utils/router.util.js';
 import { HTTP_METHODS } from '../../utils/constants/http.constant.js';
-import { MethodNotAllowedException, RouteNotFoundException } from '../../exceptions/app.exception.js';
+import {
+    InternalServerErrorException,
+    MethodNotAllowedException,
+    RouteNotFoundException
+} from '../../exceptions/AppException.js';
+import { ERROR_MESSAGE } from '../../exceptions/ErrorMessage.js';
 
 class Router {
-    constructor({ prefix } = {}) {
+    constructor({ prefix = '' } = {}) {
         this.routes = {
             GET: new Map(),
             POST: new Map(),
@@ -16,18 +22,10 @@ class Router {
             PATCH: new Map()
         };
 
-        // 지연 등록을 위한 임시 라우트 저장소
-        this.pendingRoutes = {
-            GET: [],
-            POST: [],
-            PUT: [],
-            DELETE: [],
-            PATCH: []
-        };
-
         this.bodyParser = new BodyParser();
+
+        this.prefix = prefix !== '' ? this.normalizeRouterPrefix(prefix) : '';
         this.globalPrefixPath = '';
-        this.prefix = prefix;
     }
 
     /**
@@ -36,23 +34,23 @@ class Router {
      * ======================================
      */
     get(path, handler) {
-        this.pendingRoutes.GET.push({ path: this.getCombinedWithPrefix(path), handler });
+        this.routes.GET.set(this.getFullCombinedPath(path), handler);
         return this;
     }
     post(path, handler) {
-        this.pendingRoutes.POST.push({ path: this.getCombinedWithPrefix(path), handler });
+        this.routes.POST.set(this.getFullCombinedPath(path), handler);
         return this;
     }
     put(path, handler) {
-        this.pendingRoutes.PUT.push({ path: this.getCombinedWithPrefix(path), handler });
+        this.routes.PUT.set(this.getFullCombinedPath(path), handler);
         return this;
     }
     delete(path, handler) {
-        this.pendingRoutes.DELETE.push({ path: this.getCombinedWithPrefix(path), handler });
+        this.routes.DELETE.set(this.getFullCombinedPath(path), handler);
         return this;
     }
     patch(path, handler) {
-        this.pendingRoutes.PATCH.push({ path: this.getCombinedWithPrefix(path), handler });
+        this.routes.PATCH.set(this.getFullCombinedPath(path), handler);
         return this;
     }
 
@@ -62,12 +60,11 @@ class Router {
      * ======================================
      */
     use(router) {
-        Object.keys(router.pendingRoutes).forEach((method) => {
-            const pendingRoutesForMethod = router.pendingRoutes[method];
+        Object.keys(router.routes).forEach((method) => {
+            const routesForMethod = router.routes[method];
 
-            pendingRoutesForMethod.forEach(({ path, handler }) => {
-                const fullPath = this.globalPrefixPath + path;
-                this.routes[method].set(fullPath, handler);
+            routesForMethod.forEach((handler, path) => {
+                this.routes[method].set(this.globalPrefixPath + path, handler);
             });
         });
 
@@ -116,6 +113,14 @@ class Router {
      * ======== MATCH WITH ROUTER ===========
      * ======================================
      */
+    isSegmentCountEqual(routeSegmentList, requestSegmentList) {
+        return requestSegmentList.length === routeSegmentList.length;
+    }
+
+    isPathVariableSegment(segment) {
+        return segment.startsWith(':');
+    }
+
     generateSearchRouteResult(isMatched, args = { params: {}, handlerFunc: null }) {
         return {
             isMatched,
@@ -163,10 +168,6 @@ class Router {
         return this.matchEachSegment(routePathSegmentList, requestPathSegmentList);
     }
 
-    isSegmentCountEqual(routeSegmentList, requestSegmentList) {
-        return requestSegmentList.length === routeSegmentList.length;
-    }
-
     matchEachSegment(routeSegmentList, requestSegmentList) {
         const params = {};
 
@@ -186,77 +187,56 @@ class Router {
         return this.generateSearchRouteResult(true, { params });
     }
 
-    isPathVariableSegment(segment) {
-        return segment.startsWith(':');
-    }
-
     /**
      * ======================================
      * ======== SET ROUTER PREFIX ===========
      * ======================================
      */
+    setGlobalPrefixPath(globalPrefixPath) {
+        if (!this.isValidPrefix(globalPrefixPath)) {
+            throw new InternalServerErrorException(ERROR_MESSAGE.INVALID_PREFIX);
+        }
+        this.globalPrefixPath = this.normalizeRouterPrefix(globalPrefixPath);
+        return this;
+    }
+
     isValidPrefix(prefix) {
-        // 빈 문자열이거나 null/undefined인 경우 유효하지 않음
-        // 공백만 있는 경우 유효하지 않음
         if (!prefix || prefix.trim() === '' || prefix.trim() !== prefix) {
             return false;
         }
-
-        // 연속된 슬래시가 있는 경우 유효하지 않음 (ex. //users, users//api)
         if (prefix.includes('//')) {
             return false;
         }
-
-        // 특수 문자나 유효하지 않은 URL 문자가 있는 경우
-        const validUrlPattern = /^[a-zA-Z0-9\-_\/]+$/;
-        if (!validUrlPattern.test(prefix)) {
+        if (!REGEX.ROUTER_PREFIX.test(prefix)) {
             return false;
         }
-
-        // (1) 앞에 /를 안붙인 경우 + 뒤에 /를 안붙인 경우 (ex. users) ✅
-        // (2) 앞에 /를 안붙인 경우 + 뒤에 /를 붙인 경우 (ex. users/) ✅
-        // (3) 앞에 /를 붙인 경우 + 뒤에 /를 안붙인 경우 (ex. /users) ✅
-        // (4) 앞에 /를 붙이고 뒤에 /를 붙인 경우 (ex. /users/) ✅
-        // (5) 이 외의 경우는 위의 검증을 통과한 경우만 유효
 
         return true;
     }
 
-    setGlobalPrefixPath(globalPrefixPath) {
-        this.globalPrefixPath = globalPrefixPath;
-        return this;
-    }
-
-    getCombinedWithPrefix(path) {
-        if (!this.isValidPrefix(this.prefix)) {
-            return path;
+    normalizeRouterPrefix(prefix) {
+        if (!this.isValidPrefix(prefix)) {
+            throw new InternalServerErrorException(ERROR_MESSAGE.INVALID_PREFIX);
         }
 
-        // prefix를 정규화 (앞뒤 슬래시 처리)
-        let normalizedPrefix = this.prefix;
+        let normalizedPrefix = prefix;
 
-        // prefix가 /로 시작하지 않으면 추가
         if (!normalizedPrefix.startsWith('/')) {
             normalizedPrefix = '/' + normalizedPrefix;
         }
 
-        // prefix가 /로 끝나면 제거 (path와 결합할 때 중복 방지)
         if (normalizedPrefix.endsWith('/') && normalizedPrefix !== '/') {
             normalizedPrefix = normalizedPrefix.slice(0, -1);
         }
 
-        // path 정규화
-        let normalizedPath = path;
-        if (!normalizedPath.startsWith('/')) {
-            normalizedPath = '/' + normalizedPath;
-        }
-
-        // 최종 결합
-        return normalizedPrefix + normalizedPath;
+        return normalizedPrefix;
     }
 
-    getCombinedPath(path) {
-        return `${this.globalPrefixPath}${path}`;
+    getFullCombinedPath(path) {
+        const fullPath = this.globalPrefixPath + this.prefix + path;
+
+        // 경로 정규화: 중복 슬래시 제거
+        return fullPath.replace(/\/+/g, '/');
     }
 }
 
