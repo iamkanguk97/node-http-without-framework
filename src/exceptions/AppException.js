@@ -10,6 +10,12 @@ export class AppException extends Error {
     }
 }
 
+export class BadRequestException extends AppException {
+    constructor(errorInfo) {
+        super(StatusCodes.BAD_REQUEST, errorInfo);
+    }
+}
+
 export class NotFoundException extends AppException {
     constructor(errorInfo) {
         super(StatusCodes.NOT_FOUND, errorInfo ?? ERROR_MESSAGE.NOT_FOUND);
