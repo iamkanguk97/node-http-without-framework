@@ -56,21 +56,21 @@ class UserRepository {
     /**
      * @Repository
      * @param {string} nickname
-     * @returns {Promise<User>}
+     * @returns {Promise<UserEntity[]>}
      */
     findByNickname = async (nickname) => {
         const userList = await this.findAll();
-        return userList.filter((user) => user.nickname === nickname);
+        return userList.filter((user) => user.nickName === nickname);
     };
 
     /**
      * @Repository
      * @param {string} email
-     * @returns {Promise<User>}
+     * @returns {Promise<UserEntity[]>}
      */
     findByEmail = async (email) => {
         const userList = await this.findAll();
-        return userList.filter((user) => user.email === email);
+        return userList.filter((user) => user.getFullEmail() === email);
     };
 }
 

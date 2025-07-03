@@ -22,12 +22,7 @@ class BodyParser {
         };
     }
 
-    /**
-     * Get the request body from HTTP request stream
-     * @param {http.IncomingMessage} req
-     * @returns {Promise<string>}
-     */
-    getRequestBody(req) {
+    async getRequestBody(req) {
         return new Promise((resolve, reject) => {
             let body = '';
             let size = 0;

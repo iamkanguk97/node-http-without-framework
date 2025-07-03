@@ -1,6 +1,6 @@
 'use strict';
 
-import { userService } from '../services/user.service.js';
+import { userService } from '../services/UserService.js';
 import { UserCreateRequestDto } from '../dtos/UserDto.js';
 import { ResponseHandler } from '../utils/ResponseHandler.js';
 

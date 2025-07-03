@@ -104,8 +104,6 @@ class Router {
         req.query = parsedUrl.query;
         req.params = {};
 
-        console.log(this.routes);
-
         const searchRouteResult = this.searchRoute(req.method, parsedUrl.pathname);
 
         if (!searchRouteResult.isMatched) {
@@ -272,7 +270,6 @@ class Router {
     }
 
     getCombinedWithRouterPrefix(path) {
-        // path가 '/'인 경우 prefix만 반환 (끝에 슬래시 방지)
         if (path === '/') {
             return this.prefix;
         }

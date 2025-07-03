@@ -2,9 +2,9 @@
 
 import http from 'http';
 import Router from './common/router/index.js';
-import userRouter from './routes/user.route.js';
-import movieRouter from './routes/movie.route.js';
-import { errorHandlerMiddleware } from './common/middleware/error-handler.middleware.js';
+import userRouter from './routes/UserRoute.js';
+import movieRouter from './routes/MovieRoute.js';
+import { errorHandlerMiddleware } from './common/middleware/ErrorHandlerMiddleware.js';
 
 export function setRouterOptions(router) {
     // Set global prefix path

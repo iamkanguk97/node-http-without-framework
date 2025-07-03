@@ -1,10 +1,9 @@
 'use strict';
 
 import Router from '../common/router/index.js';
-import { movieController } from '../controllers/movie.controller.js';
+import { movieController } from '../controllers/MovieController.js';
 
-// const movieRouter = new Router({ prefix: '/movies' });
-const movieRouter = new Router({ prefix: '/' });
+const movieRouter = new Router({ prefix: '/movies' });
 
 movieRouter.post('/', movieController.postMovie);
 
