@@ -89,26 +89,26 @@ class Router {
         req.params = {};
 
         const searchRouteResult = this.searchRoute(method, pathName);
-        console.log(searchRouteResult);
 
-        if (searchRouteResult) {
-            const { params, handlerFunc } = searchRouteResult;
-            req.params = params;
-
-            // Parse the request-body for HTTP POST, PUT, PATCH methods
-            if ([HTTP_METHODS.POST, HTTP_METHODS.PUT, HTTP_METHODS.PATCH].includes(method)) {
-                const { rawBody, parsedBody } = await this.bodyParser.parseRequestBody(req);
-
-                req.body = parsedBody;
-                req.rawBody = rawBody;
-            } else {
-                req.body = {};
-                req.rawBody = '';
-            }
-
-            // Execute the handler function
-            await handlerFunc(req, res);
+        if (!searchRouteResult.isMatched) {
+            throw new RouteNotFoundException();
         }
+
+        req.params = searchRouteResult.params;
+        req.body = {};
+        req.rawBody = '';
+
+        if (this.isRequestBodyRequiredMethod(method)) {
+            const { rawBody, parsedBody } = await this.bodyParser.parseRequestBody(req);
+            req.body = parsedBody;
+            req.rawBody = rawBody;
+        }
+
+        await searchRouteResult.handlerFunc(req, res);
+    }
+
+    isRequestBodyRequiredMethod(method) {
+        return [HTTP_METHODS.POST, HTTP_METHODS.PUT, HTTP_METHODS.PATCH].includes(method);
     }
 
     /**
@@ -116,6 +116,14 @@ class Router {
      * ======== MATCH WITH ROUTER ===========
      * ======================================
      */
+    generateSearchRouteResult(isMatched, args = { params: {}, handlerFunc: null }) {
+        return {
+            isMatched,
+            params: args.params,
+            handlerFunc: args.handlerFunc
+        };
+    }
+
     searchRoute(method, pathName) {
         const matchedRouteByMethod = this.routes[method];
 
@@ -125,10 +133,7 @@ class Router {
 
         // Path-Variable 없이 매칭이 된 경우
         if (matchedRouteByMethod.has(pathName)) {
-            return {
-                params: {},
-                handlerFunc: matchedRouteByMethod.get(pathName)
-            };
+            return this.generateSearchRouteResult(true, { handlerFunc: matchedRouteByMethod.get(pathName) });
         }
 
         return this.matchWithDynamicRoute(matchedRouteByMethod, pathName);
@@ -136,26 +141,23 @@ class Router {
 
     matchWithDynamicRoute(targetRouteMap, requestPathName) {
         for (const [routePathName, handlerFunc] of targetRouteMap) {
-            const matchResult = this.executeMatchRoute(routePathName, getPathSegmentList(requestPathName));
-            console.log('여기?');
-            console.log(matchResult);
+            const result = this.executeMatchRoute(routePathName, getPathSegmentList(requestPathName));
 
-            if (matchResult) {
-                return {
-                    params: matchResult,
-                    handlerFunc
-                };
+            if (!result.isMatched) {
+                continue;
             }
+
+            return this.generateSearchRouteResult(true, { params: result.params, handlerFunc });
         }
 
-        return null;
+        return this.generateSearchRouteResult(false);
     }
 
     executeMatchRoute(routePathName, requestPathSegmentList) {
         const routePathSegmentList = getPathSegmentList(routePathName);
 
         if (!this.isSegmentCountEqual(routePathSegmentList, requestPathSegmentList)) {
-            throw new RouteNotFoundException();
+            return this.generateSearchRouteResult(false);
         }
 
         return this.matchEachSegment(routePathSegmentList, requestPathSegmentList);
@@ -166,7 +168,7 @@ class Router {
     }
 
     matchEachSegment(routeSegmentList, requestSegmentList) {
-        const result = {};
+        const params = {};
 
         for (let i = 0; i < routeSegmentList.length; i++) {
             const routeSegment = routeSegmentList[i];
@@ -176,18 +178,23 @@ class Router {
                 params[routeSegment.slice(1)] = requestSegment;
             } else {
                 if (routeSegment !== requestSegment) {
-                    throw new RouteNotFoundException();
+                    return this.generateSearchRouteResult(false);
                 }
             }
         }
 
-        return result;
+        return this.generateSearchRouteResult(true, { params });
     }
 
     isPathVariableSegment(segment) {
         return segment.startsWith(':');
     }
 
+    /**
+     * ======================================
+     * ======== SET ROUTER PREFIX ===========
+     * ======================================
+     */
     isValidPrefix(prefix) {
         // 빈 문자열이거나 null/undefined인 경우 유효하지 않음
         // 공백만 있는 경우 유효하지 않음

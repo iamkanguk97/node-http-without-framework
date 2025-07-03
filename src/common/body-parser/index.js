@@ -2,7 +2,11 @@
 
 import { getContentType, getFullContentType, getBaseContentType } from '../../utils/router.util.js';
 import { HTTP_CONTENT_TYPES, SUPPORTED_CONTENT_TYPES } from '../../utils/constants/content-type.constant.js';
-import { HTTP_REQUEST_BODY_MAX_SIZE, HTT_REQUEST_TIMEOUT_LIMIT, HTTP_MULTIPART_BODY_MAX_SIZE } from '../../utils/constants/body-parser.constant.js';
+import {
+    HTTP_REQUEST_BODY_MAX_SIZE,
+    HTT_REQUEST_TIMEOUT_LIMIT,
+    HTTP_MULTIPART_BODY_MAX_SIZE
+} from '../../utils/constants/body-parser.constant.js';
 
 class BodyParser {
     constructor() {
@@ -29,7 +33,10 @@ class BodyParser {
             let size = 0;
 
             const contentType = getContentType(req);
-            const limitSize = contentType === HTTP_CONTENT_TYPES.MULTIPART_FORM_DATA ? this.options.multipartMaxSize : this.options.maxSize;
+            const limitSize =
+                contentType === HTTP_CONTENT_TYPES.MULTIPART_FORM_DATA
+                    ? this.options.multipartMaxSize
+                    : this.options.maxSize;
 
             // Set the timeout for the request-body
             const timeout = setTimeout(() => {
@@ -37,7 +44,7 @@ class BodyParser {
             }, this.options.timeout);
 
             // Request-body stream data transfer event listener
-            req.on('data', chunk => {
+            req.on('data', (chunk) => {
                 size += chunk.length;
 
                 // Check the request-body size exceeds the maximum limit
@@ -56,7 +63,7 @@ class BodyParser {
             });
 
             // Request-body stream transfer error event listener
-            req.on('error', error => {
+            req.on('error', (error) => {
                 clearTimeout(timeout);
                 reject(new Error(error.message));
             });
@@ -110,11 +117,6 @@ class BodyParser {
         }
     }
 
-    /**
-     * Parse the request body from the request
-     * @param {http.IncomingMessage} req
-     * @param {http.ServerResponse} res
-     */
     async parseRequestBody(req) {
         try {
             const rawRequestBody = await this.getRequestBody(req);
