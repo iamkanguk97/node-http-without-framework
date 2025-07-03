@@ -84,7 +84,7 @@ class Router {
             const routesForMethod = router.routes[method];
 
             routesForMethod.forEach((handler, path) => {
-                const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+                const fullCombinedRouterPath = this.getFullCombinedPath(path);
                 this.checkDuplicateRoute(method, fullCombinedRouterPath);
                 this.routes[method].set(fullCombinedRouterPath, handler);
             });
@@ -103,6 +103,8 @@ class Router {
 
         req.query = parsedUrl.query;
         req.params = {};
+
+        console.log(this.routes);
 
         const searchRouteResult = this.searchRoute(req.method, parsedUrl.pathname);
 
@@ -270,6 +272,11 @@ class Router {
     }
 
     getCombinedWithRouterPrefix(path) {
+        // path가 '/'인 경우 prefix만 반환 (끝에 슬래시 방지)
+        if (path === '/') {
+            return this.prefix;
+        }
+
         return this.prefix + path;
     }
 
