@@ -27,9 +27,3 @@ export class MethodNotAllowedException extends AppException {
         super(StatusCodes.METHOD_NOT_ALLOWED, ERROR_MESSAGE.METHOD_NOT_ALLOWED);
     }
 }
-
-export class InternalServerErrorException extends AppException {
-    constructor(errorInfo) {
-        super(StatusCodes.INTERNAL_SERVER_ERROR, errorInfo ?? ERROR_MESSAGE.INTERNAL_SERVER_ERROR);
-    }
-}
