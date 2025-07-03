@@ -9,6 +9,11 @@ class UserController {
         this.userService = userService;
     }
 
+    /**
+     * 사용자 생성
+     * @param {*} req HTTP 요청 객체
+     * @param {*} res HTTP 응답 객체
+     */
     postUser = async (req, res) => {
         const { email, password, nickName } = req.body;
 
@@ -20,91 +25,99 @@ class UserController {
     };
 
     /**
-     * Get all users controller
-     * @param {*} req
-     * @param {*} res
+     * 모든 사용자 조회
+     * @param {*} req HTTP 요청 객체
+     * @param {*} res HTTP 응답 객체
      */
     getUserList = async (req, res) => {
-        const result = await this.userService.findAll();
+        const result = await this.userService.findAllUsers();
 
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(
-            JSON.stringify({
-                success: true,
-                data: result,
-                message: '사용자 목록을 성공적으로 조회했습니다.'
-            })
-        );
+        return ResponseHandler.ok(res, result, '사용자 목록을 성공적으로 조회했습니다.');
     };
 
+    /**
+     * ID로 사용자 조회
+     * @param {*} req HTTP 요청 객체
+     * @param {*} res HTTP 응답 객체
+     */
     getUserById = async (req, res) => {
         const { id } = req.params;
 
         // Validation Check
         if (!id) {
-            throw new Error('사용자 ID를 입력해주세요.');
+            return ResponseHandler.badRequest(res, null, '사용자 ID를 입력해주세요.');
         }
 
         const result = await this.userService.findUserById(id);
 
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(
-            JSON.stringify({
-                success: true,
-                data: result,
-                message: '사용자 정보를 성공적으로 조회했습니다.'
-            })
-        );
+        if (!result) {
+            return ResponseHandler.notFound(res, null, '사용자를 찾을 수 없습니다.');
+        }
+
+        return ResponseHandler.ok(res, result, '사용자 정보를 성공적으로 조회했습니다.');
     };
 
     /**
-     * @Controller
-     * @description Check user nickname is duplicate or not.
-     * @param {*} req
-     * @param {*} res
+     * 닉네임 중복 검사
+     * @param {*} req HTTP 요청 객체
+     * @param {*} res HTTP 응답 객체
      */
     getUserCheckNickName = async (req, res) => {
         const { nickName } = req.query;
 
         // Validation Check
         if (!nickName) {
-            throw new Error('닉네임을 입력해주세요.');
+            return ResponseHandler.badRequest(res, null, '닉네임을 입력해주세요.');
         }
 
         await this.userService.checkIsDuplicateNickname(nickName);
 
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(
-            JSON.stringify({
-                success: true,
-                message: '사용 가능한 닉네임입니다.'
-            })
-        );
+        return ResponseHandler.ok(res, null, '사용 가능한 닉네임입니다.');
     };
 
     /**
-     * @Controller
-     * @description Check user email is duplicate or not.
-     * @param {*} req
-     * @param {*} res
+     * 이메일 중복 검사
+     * @param {*} req HTTP 요청 객체
+     * @param {*} res HTTP 응답 객체
      */
     getUserCheckEmail = async (req, res) => {
         const { email } = req.query;
 
         // Validation Check
         if (!email) {
-            throw new Error('이메일을 입력해주세요.');
+            return ResponseHandler.badRequest(res, null, '이메일을 입력해주세요.');
         }
 
         await this.userService.checkIsDuplicateEmail(email);
 
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(
-            JSON.stringify({
-                success: true,
-                message: '사용 가능한 이메일입니다.'
-            })
-        );
+        return ResponseHandler.ok(res, null, '사용 가능한 이메일입니다.');
+    };
+
+    /**
+     * 사용자 로그인
+     * @param {*} req HTTP 요청 객체
+     * @param {*} res HTTP 응답 객체
+     */
+    postUserLogin = async (req, res) => {
+        const { email, password } = req.body;
+
+        // Validation Check
+        if (!email || !password) {
+            return ResponseHandler.badRequest(res, null, '이메일과 비밀번호를 모두 입력해주세요.');
+        }
+
+        const user = await this.userService.loginUser(email, password);
+
+        // 비밀번호 정보는 응답에서 제외
+        const responseData = {
+            id: user.id,
+            displayId: user.displayId,
+            email: user.getFullEmail(),
+            nickName: user.nickName,
+            profileImageUrl: user.profileImageUrl
+        };
+
+        return ResponseHandler.ok(res, responseData, '로그인에 성공했습니다.');
     };
 }
 

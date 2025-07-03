@@ -23,5 +23,12 @@ export const ERROR_MESSAGE = Object.freeze({
     NICKNAME_EMPTY: { responseCode: 3003, message: '닉네임을 입력해주세요.' },
     NICKNAME_FORMAT_INVALID: { responseCode: 3004, message: '닉네임 형식이 올바르지 않습니다.' },
     PASSWORD_EMPTY: { responseCode: 3005, message: '비밀번호를 입력해주세요.' },
-    PASSWORD_FORMAT_INVALID: { responseCode: 3006, message: '비밀번호 형식이 올바르지 않습니다.' }
+    PASSWORD_FORMAT_INVALID: { responseCode: 3006, message: '비밀번호 형식이 올바르지 않습니다.' },
+
+    /** 사용자 비즈니스 로직 에러 종류 */
+    DUPLICATE_EMAIL: { responseCode: 3007, message: '이미 사용 중인 이메일입니다.' },
+    DUPLICATE_NICKNAME: { responseCode: 3008, message: '이미 사용 중인 닉네임입니다.' },
+    USER_NOT_FOUND: { responseCode: 3009, message: '사용자를 찾을 수 없습니다.' },
+    USER_DELETED: { responseCode: 3010, message: '삭제된 사용자입니다.' },
+    INVALID_PASSWORD: { responseCode: 3011, message: '비밀번호가 일치하지 않습니다.' }
 });

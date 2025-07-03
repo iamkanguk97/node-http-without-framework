@@ -21,6 +21,6 @@ export class BaseValidator extends BaseValidationUtil {
             }
         }
 
-        return true;
+        return data;
     }
 }
