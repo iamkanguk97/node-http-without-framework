@@ -3,7 +3,7 @@
 import Router from '../common/router/index.js';
 import { userController } from '../controllers/user.controller.js';
 
-const userRouter = new Router({ prefix: '/' });
+const userRouter = new Router({ prefix: '/users' });
 
 /**
  * Create a new user.
