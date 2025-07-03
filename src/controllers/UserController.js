@@ -1,10 +1,8 @@
 'use strict';
 
 import { userService } from '../services/user.service.js';
-import { validateEmail } from '../utils/validations/email.validation.js';
-import { validateNickname } from '../utils/validations/nickname.validation.js';
-import { validatePassword } from '../utils/validations/password.validation.js';
-import { UserCreateRequestDto } from '../dtos/user.dto.js';
+import { UserCreateRequestDto } from '../dtos/UserDto.js';
+import { ResponseHandler } from '../utils/ResponseHandler.js';
 
 class UserController {
     constructor(userService) {
@@ -14,21 +12,11 @@ class UserController {
     postUser = async (req, res) => {
         const { email, password, nickName } = req.body;
 
-        validateEmail(email);
-        validateNickname(nickName);
-        validatePassword(password);
-
-        const createUserDto = new UserCreateRequestDto(email, password, nickName);
-        const result = await this.userService.createUser(createUserDto);
-
-        res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(
-            JSON.stringify({
-                success: true,
-                data: result,
-                message: '사용자가 성공적으로 생성되었습니다.'
-            })
+        const result = await this.userService.createUser(
+            UserCreateRequestDto.create(email, password, nickName)
         );
+
+        return ResponseHandler.created(res, result, '사용자가 성공적으로 생성되었습니다.');
     };
 
     /**

@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import { ERROR_MESSAGE } from '../../exceptions/ErrorMessage.js';
 import dayjs from 'dayjs';
 
-export class ErrorHandlerMiddleware {
+class ErrorHandlerMiddleware {
     handleError(error, req, res) {
         const statusCode = this.getStatusCodeFromResponse(error);
         const message = this.getMessageFromResponse(error);
