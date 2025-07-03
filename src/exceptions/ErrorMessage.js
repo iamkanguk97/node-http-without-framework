@@ -11,5 +11,6 @@ export const ERROR_MESSAGE = Object.freeze({
 
     /** 서버 내부에러 종류 */
     INTERNAL_SERVER_ERROR: { responseCode: 8000, message: '서버 내부 오류가 발생했습니다.' },
-    INVALID_PREFIX: { responseCode: 8001, message: '유효하지 않은 Router Path Prefix 입니다.' }
+    INVALID_PREFIX: { responseCode: 8001, message: '유효하지 않은 Router Path Prefix 입니다.' },
+    DUPLICATE_ROUTE: { responseCode: 8002, message: '중복된 라우트 경로가 감지되었습니다.' }
 });

@@ -24,8 +24,8 @@ class Router {
 
         this.bodyParser = new BodyParser();
 
-        this.prefix = prefix !== '' ? this.normalizeRouterPrefix(prefix) : '';
         this.globalPrefixPath = '';
+        this.prefix = this.normalizeRouterPrefix(prefix);
     }
 
     /**
@@ -34,23 +34,43 @@ class Router {
      * ======================================
      */
     get(path, handler) {
-        this.routes.GET.set(this.getFullCombinedPath(path), handler);
+        const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+
+        this.checkDuplicateRoute(HTTP_METHODS.GET, fullCombinedRouterPath);
+        this.routes.GET.set(fullCombinedRouterPath, handler);
+
         return this;
     }
     post(path, handler) {
-        this.routes.POST.set(this.getFullCombinedPath(path), handler);
+        const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+
+        this.checkDuplicateRoute(HTTP_METHODS.POST, fullCombinedRouterPath);
+        this.routes.POST.set(fullCombinedRouterPath, handler);
+
         return this;
     }
     put(path, handler) {
-        this.routes.PUT.set(this.getFullCombinedPath(path), handler);
-        return this;
-    }
-    delete(path, handler) {
-        this.routes.DELETE.set(this.getFullCombinedPath(path), handler);
+        const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+
+        this.checkDuplicateRoute(HTTP_METHODS.PUT, fullCombinedRouterPath);
+        this.routes.PUT.set(fullCombinedRouterPath, handler);
+
         return this;
     }
     patch(path, handler) {
-        this.routes.PATCH.set(this.getFullCombinedPath(path), handler);
+        const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+
+        this.checkDuplicateRoute(HTTP_METHODS.PATCH, fullCombinedRouterPath);
+        this.routes.PATCH.set(fullCombinedRouterPath, handler);
+
+        return this;
+    }
+    delete(path, handler) {
+        const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+
+        this.checkDuplicateRoute(HTTP_METHODS.DELETE, fullCombinedRouterPath);
+        this.routes.DELETE.set(fullCombinedRouterPath, handler);
+
         return this;
     }
 
@@ -64,7 +84,9 @@ class Router {
             const routesForMethod = router.routes[method];
 
             routesForMethod.forEach((handler, path) => {
-                this.routes[method].set(this.globalPrefixPath + path, handler);
+                const fullCombinedRouterPath = this.getCombinedWithRouterPrefix(path);
+                this.checkDuplicateRoute(method, fullCombinedRouterPath);
+                this.routes[method].set(fullCombinedRouterPath, handler);
             });
         });
 
@@ -77,15 +99,12 @@ class Router {
      * ======================================
      */
     async handleRequest(req, res) {
-        const { method } = req;
-
         const parsedUrl = url.parse(req.url, true);
-        const pathName = parsedUrl.pathname;
 
         req.query = parsedUrl.query;
         req.params = {};
 
-        const searchRouteResult = this.searchRoute(method, pathName);
+        const searchRouteResult = this.searchRoute(req.method, parsedUrl.pathname);
 
         if (!searchRouteResult.isMatched) {
             throw new RouteNotFoundException();
@@ -95,7 +114,7 @@ class Router {
         req.body = {};
         req.rawBody = '';
 
-        if (this.isRequestBodyRequiredMethod(method)) {
+        if (this.isRequestBodyRequiredMethod(req.method)) {
             const { rawBody, parsedBody } = await this.bodyParser.parseRequestBody(req);
             req.body = parsedBody;
             req.rawBody = rawBody;
@@ -138,7 +157,9 @@ class Router {
 
         // Path-Variable 없이 매칭이 된 경우
         if (matchedRouteByMethod.has(pathName)) {
-            return this.generateSearchRouteResult(true, { handlerFunc: matchedRouteByMethod.get(pathName) });
+            return this.generateSearchRouteResult(true, {
+                handlerFunc: matchedRouteByMethod.get(pathName)
+            });
         }
 
         return this.matchWithDynamicRoute(matchedRouteByMethod, pathName);
@@ -189,6 +210,20 @@ class Router {
 
     /**
      * ======================================
+     * ====== DUPLICATE ROUTE CHECK =========
+     * ======================================
+     */
+    checkDuplicateRoute(method, path) {
+        if (this.routes[method].has(path)) {
+            throw new InternalServerErrorException({
+                responseCode: ERROR_MESSAGE.DUPLICATE_ROUTE.responseCode,
+                message: `${ERROR_MESSAGE.DUPLICATE_ROUTE.message} [${method} ${path}]`
+            });
+        }
+    }
+
+    /**
+     * ======================================
      * ======== SET ROUTER PREFIX ===========
      * ======================================
      */
@@ -201,13 +236,11 @@ class Router {
     }
 
     isValidPrefix(prefix) {
-        if (!prefix || prefix.trim() === '' || prefix.trim() !== prefix) {
-            return false;
-        }
-        if (prefix.includes('//')) {
-            return false;
-        }
-        if (!REGEX.ROUTER_PREFIX.test(prefix)) {
+        if (
+            prefix.trim() !== prefix ||
+            prefix.includes('//') ||
+            (prefix !== '' && !REGEX.ROUTER_PREFIX.test(prefix))
+        ) {
             return false;
         }
 
@@ -217,6 +250,10 @@ class Router {
     normalizeRouterPrefix(prefix) {
         if (!this.isValidPrefix(prefix)) {
             throw new InternalServerErrorException(ERROR_MESSAGE.INVALID_PREFIX);
+        }
+
+        if (prefix === '' || prefix === '/') {
+            return '';
         }
 
         let normalizedPrefix = prefix;
@@ -232,11 +269,12 @@ class Router {
         return normalizedPrefix;
     }
 
-    getFullCombinedPath(path) {
-        const fullPath = this.globalPrefixPath + this.prefix + path;
+    getCombinedWithRouterPrefix(path) {
+        return this.prefix + path;
+    }
 
-        // 경로 정규화: 중복 슬래시 제거
-        return fullPath.replace(/\/+/g, '/');
+    getFullCombinedPath(path) {
+        return this.globalPrefixPath + path;
     }
 }
 

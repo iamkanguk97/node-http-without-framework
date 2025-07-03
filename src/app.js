@@ -3,6 +3,7 @@
 import http from 'http';
 import Router from './common/router/index.js';
 import userRouter from './routes/user.route.js';
+import movieRouter from './routes/movie.route.js';
 import { errorHandlerMiddleware } from './common/middleware/error-handler.middleware.js';
 
 export function setRouterOptions(router) {
@@ -11,6 +12,7 @@ export function setRouterOptions(router) {
 
     // Register these routes to the router
     router.use(userRouter);
+    router.use(movieRouter);
 }
 
 export function createApplicationServer() {
