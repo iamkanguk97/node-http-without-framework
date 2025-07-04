@@ -2,11 +2,10 @@
 
 import { userRepository } from '../repositories/UserRepository.js';
 import { UserDomainService } from './UserDomainService.js';
-import { DisplayIdEntity } from '../entities/DisplayId.js';
 import { UserEntity } from '../entities/User.js';
+import { ConflictException } from '../exceptions/AppException.js';
+import { ERROR_MESSAGE } from '../exceptions/ErrorMessage.js';
 import { UserCreateResponseDto } from '../dtos/UserDto.js';
-import { uuidv7 } from '../utils/schema/schema.util.js';
-import dayjs from 'dayjs';
 
 class UserService {
     constructor(userRepository, userDomainService) {
@@ -14,43 +13,35 @@ class UserService {
         this.userDomainService = userDomainService;
     }
 
-    /**
-     * 사용자 생성
-     * @param {UserCreateRequestDto} createUserDto 사용자 생성 요청 DTO
-     * @returns {Promise<UserCreateResponseDto>} 생성된 사용자 응답 DTO
-     */
     createUser = async (createUserDto) => {
-        const { email, password, nickName } = createUserDto;
+        // Business Validation Check
+        await Promise.all([
+            this.checkEmailUnique(createUserDto.email),
+            this.checkNicknameUnique(createUserDto.nickname)
+        ]);
 
-        // 1. 도메인 검증 (이메일/닉네임 중복 검사)
-        await this.userDomainService.validateUserCreation({
-            email,
-            nickName
-        });
-
-        // 2. 고유 ID 생성
-        const userId = uuidv7();
-        const displayId = await DisplayIdEntity.generateDisplayId();
-
-        // 3. 사용자 엔티티 생성 (팩토리 메서드 활용)
-        const userEntity = await UserEntity.createUser({
-            id: userId,
-            displayId,
-            email,
-            password,
-            nickName
-        });
-
-        // 4. 데이터베이스에 저장
-        const savedUser = await this.userRepository.create(userEntity);
-
-        // 5. 응답 DTO 생성
-        return new UserCreateResponseDto(
-            savedUser.id,
-            savedUser.displayId,
-            savedUser.getFullEmail(),
-            savedUser.nickName
+        const createdUserEntity = UserEntity.create(
+            createUserDto.email,
+            createUserDto.password,
+            createUserDto.nickname
         );
+
+        return UserCreateResponseDto.fromEntity(createdUserEntity);
+    };
+
+    checkEmailUnique = async (email) => {
+        const { emailLocalPart, emailDomainPart } = UserEntity.parseEmail(email);
+        const result = await this.userRepository.findByEmail(emailLocalPart, emailDomainPart);
+
+        if (result) {
+            throw new ConflictException(ERROR_MESSAGE.DUPLICATE_EMAIL);
+        }
+    };
+
+    checkNicknameUnique = async (nickname) => {
+        if (await this.userRepository.findByNickname(nickname)) {
+            throw new ConflictException(ERROR_MESSAGE.DUPLICATE_NICKNAME);
+        }
     };
 
     /**

@@ -5,9 +5,9 @@ import { NicknameValidator } from '../utils/validations/NicknameValidator.js';
 import { PasswordValidator } from '../utils/validations/PasswordValidator.js';
 
 export class UserCreateRequestDto {
-    constructor(email, password, nickName) {
+    constructor(email, password, nickname) {
         this.email = EmailValidator.validate(email);
-        this.nickName = NicknameValidator.validate(nickName);
+        this.nickname = NicknameValidator.validate(nickname);
         this.password = PasswordValidator.validate(password);
     }
 
@@ -22,5 +22,9 @@ export class UserCreateResponseDto {
         this.displayId = displayId;
         this.email = email;
         this.nickName = nickName;
+    }
+
+    static fromEntity(userEntity) {
+        return;
     }
 }

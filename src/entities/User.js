@@ -1,17 +1,19 @@
 'use strict';
 
-import { __dirname } from '../utils/path.util.js';
 import dayjs from 'dayjs';
-import bcrypt from 'bcrypt';
+import { BadRequestException } from '../exceptions/AppException.js';
+import { ERROR_MESSAGE } from '../exceptions/ErrorMessage.js';
+import { generateUniqueId } from '../utils/id-generator.util.js';
 
 export class UserEntity {
     /**
      * id: string | 고유ID (UUID) (PK)
      * displayId: string | 표시용 ID (예: D0000001) (UNIQUE)
-     * emailAddress: string | 이메일 주소
-     * emailDomain: string | 이메일 도메인
+     * emailLocalPart: string | 이메일 주소
+     * emailDomainPart: string | 이메일 도메인
+     * => (emailAddress, emailDomain) 조합으로 UNIQUE
      * password: string | 비밀번호
-     * nickName: string | 닉네임 (UNIQUE)
+     * nickname: string | 닉네임 (UNIQUE)
      * profileImageUrl: string | 프로필 이미지 URL (NULLABLE)
      * createdAt: Date | 생성일시
      * updatedAt: Date | 수정일시
@@ -28,113 +30,53 @@ export class UserEntity {
         });
     }
 
-    static fromJson(data) {
-        return new UserEntity(data);
-    }
-
-    toJson() {
-        return {
-            id: this.id,
-            displayId: this.displayId,
-            emailAddress: this.emailAddress,
-            emailDomain: this.emailDomain,
-            nickName: this.nickName,
-            profileImageUrl: this.profileImageUrl,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt,
-            deletedAt: this.deletedAt
-        };
-    }
-
-    /**
-     * 완전한 이메일 주소를 반환
-     * @returns {string} 전체 이메일 주소
-     */
-    getFullEmail() {
-        return `${this.emailAddress}@${this.emailDomain}`;
-    }
-
-    /**
-     * 이메일을 주소와 도메인으로 분리
-     * @param {string} fullEmail 전체 이메일 주소
-     * @returns {Object} {emailAddress, emailDomain}
-     */
-    static separateEmail(fullEmail) {
-        const separatedEmail = fullEmail.split('@');
-
-        if (separatedEmail.length !== 2) {
-            throw new Error('Invalid Email!');
-        }
-
-        return {
-            emailAddress: separatedEmail[0],
-            emailDomain: separatedEmail[1]
-        };
-    }
-
-    /**
-     * 비밀번호를 해시화
-     * @param {string} plainPassword 평문 비밀번호
-     * @returns {Promise<string>} 해시화된 비밀번호
-     */
-    static async hashPassword(plainPassword) {
-        return await bcrypt.hash(plainPassword, 10);
-    }
-
-    /**
-     * 비밀번호 검증
-     * @param {string} plainPassword 평문 비밀번호
-     * @returns {Promise<boolean>} 비밀번호 일치 여부
-     */
-    async verifyPassword(plainPassword) {
-        return await bcrypt.compare(plainPassword, this.password);
-    }
-
-    /**
-     * 사용자 생성을 위한 팩토리 메서드
-     * @param {Object} userData 사용자 데이터
-     * @returns {UserEntity} 새로운 사용자 엔티티
-     */
-    static async createUser(userData) {
-        const { email, password, nickName, id, displayId } = userData;
-        const { emailAddress, emailDomain } = this.separateEmail(email);
-        const hashedPassword = await this.hashPassword(password);
+    static async create(email, password, nickname) {
+        const emailParts = this.parseEmail(email);
+        const hashedPassword = password;
 
         return new UserEntity({
-            id,
-            displayId,
-            emailAddress,
-            emailDomain,
+            id: generateUniqueId(),
+            displayId: '',
+            emailLocalPart: emailParts.emailLocalPart,
+            emailDomainPart: emailParts.emailDomainPart,
             password: hashedPassword,
-            nickName,
-            profileImageUrl: null
-        });
-    }
-
-    /**
-     * 사용자 정보 업데이트
-     * @param {Object} updateData 업데이트할 데이터
-     */
-    updateUser(updateData) {
-        Object.assign(this, {
-            ...updateData,
+            nickname,
+            profileImageUrl: null,
+            createdAt: dayjs(),
             updatedAt: dayjs()
         });
     }
 
-    /**
-     * 사용자 삭제 (소프트 삭제)
-     */
-    deleteUser() {
-        this.deletedAt = dayjs();
-        this.updatedAt = dayjs();
+    // DB(JSON)로부터 데이터를 조회해서 UserEntity 인스턴스를 생성하는 메서드
+    static fromJson(userData) {
+        return new UserEntity({
+            id: userData.id,
+            displayId: userData.displayId,
+            emailLocalPart: userData.emailLocalPart,
+            emailDomainPart: userData.emailDomainPart,
+            password: userData.password,
+            nickname: userData.nickname,
+            profileImageUrl: userData.profileImageUrl,
+            createdAt: userData.createdAt,
+            updatedAt: userData.updatedAt
+        });
     }
 
-    /**
-     * 삭제된 사용자인지 확인
-     * @returns {boolean} 삭제 여부
-     */
-    isDeleted() {
-        return this.deletedAt !== null;
+    // 이메일 파싱하는 로직 -> 도메인 로직이 맞음
+    // 정상적인 유저 생성을 위해서는 이메일 파싱이 필요함 -> 유저 도메인 로직
+    static parseEmail(email) {
+        if (!email || typeof email !== 'string') {
+            throw new BadRequestException(ERROR_MESSAGE.IS_NOT_STRING);
+        }
+
+        const emailParts = email.split('@');
+        if (emailParts.length !== 2 || emailParts[0].length === 0 || emailParts[1].length === 0) {
+            throw new BadRequestException(ERROR_MESSAGE.EMAIL_FORMAT_INVALID);
+        }
+
+        return {
+            emailLocalPart: emailParts[0],
+            emailDomainPart: emailParts[1]
+        };
     }
 }

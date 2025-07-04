@@ -9,16 +9,11 @@ class UserController {
         this.userService = userService;
     }
 
-    /**
-     * 사용자 생성
-     * @param {*} req HTTP 요청 객체
-     * @param {*} res HTTP 응답 객체
-     */
     postUser = async (req, res) => {
-        const { email, password, nickName } = req.body;
+        const { email, password, nickname } = req.body;
 
         const result = await this.userService.createUser(
-            UserCreateRequestDto.create(email, password, nickName)
+            UserCreateRequestDto.create(email, password, nickname)
         );
 
         return ResponseHandler.created(res, result, '사용자가 성공적으로 생성되었습니다.');

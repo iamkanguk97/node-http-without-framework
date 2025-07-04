@@ -34,6 +34,12 @@ export class MethodNotAllowedException extends AppException {
     }
 }
 
+export class ConflictException extends AppException {
+    constructor(errorInfo) {
+        super(StatusCodes.CONFLICT, errorInfo ?? ERROR_MESSAGE.CONFLICT);
+    }
+}
+
 export class InternalServerErrorException extends AppException {
     constructor(errorInfo) {
         super(StatusCodes.INTERNAL_SERVER_ERROR, errorInfo ?? ERROR_MESSAGE.INTERNAL_SERVER_ERROR);

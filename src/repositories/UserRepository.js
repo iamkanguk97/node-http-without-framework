@@ -4,21 +4,16 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { __dirname } from '../utils/path.util.js';
 import { UserEntity } from '../entities/User.js';
-import { readFileWithFs, writeJsonFileWithFs } from '../utils/file.util.js';
+import { writeJsonFileWithFs } from '../utils/file.util.js';
 
 class UserRepository {
     constructor() {
         this.databaseFilePath = path.join(__dirname(), '../../data/User.json');
     }
 
-    /**
-     * @Repository
-     * @returns {Promise<UserEntity[]>}
-     */
     findAll = async () => {
-        const rawUserList = await readFileWithFs(this.databaseFilePath);
-        const parsedUserList = JSON.parse(rawUserList);
-        return parsedUserList.map(UserEntity.fromJson);
+        const userData = await fs.readFile(this.databaseFilePath, 'utf8');
+        return JSON.parse(userData).map(UserEntity.fromJson);
     };
 
     /**
@@ -53,24 +48,14 @@ class UserRepository {
         await writeJsonFileWithFs(this.databaseFilePath, users);
     };
 
-    /**
-     * @Repository
-     * @param {string} nickname
-     * @returns {Promise<UserEntity[]>}
-     */
-    findByNickname = async (nickname) => {
-        const userList = await this.findAll();
-        return userList.filter((user) => user.nickName === nickname);
+    findByEmail = async (emailLocalPart, emailDomainPart) => {
+        return await this.findAll().find(
+            (user) => user.emailLocalPart === emailLocalPart && user.emailDomainPart === emailDomainPart
+        );
     };
 
-    /**
-     * @Repository
-     * @param {string} email
-     * @returns {Promise<UserEntity[]>}
-     */
-    findByEmail = async (email) => {
-        const userList = await this.findAll();
-        return userList.filter((user) => user.getFullEmail() === email);
+    findByNickname = async (nickname) => {
+        return await this.findAll().find((user) => user.nickname === nickname);
     };
 }
 
