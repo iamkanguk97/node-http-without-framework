@@ -27,11 +27,6 @@ class UserRepository {
         return user;
     };
 
-    /**
-     * @Repository
-     * @param {UserEntity} userEntity
-     * @returns {Promise<UserEntity>}
-     */
     create = async (userEntity) => {
         const userList = await this.findAll();
         userList.push(userEntity);
@@ -39,23 +34,18 @@ class UserRepository {
         return userEntity;
     };
 
-    /**
-     * @Repository
-     * @param {UserEntity[]} users
-     * @returns {Promise<void>}
-     */
-    save = async (users) => {
-        await writeJsonFileWithFs(this.databaseFilePath, users);
+    save = async (data) => {
+        await fs.writeFile(this.databaseFilePath, JSON.stringify(data));
     };
 
     findByEmail = async (emailLocalPart, emailDomainPart) => {
-        return await this.findAll().find(
+        return (await this.findAll()).find(
             (user) => user.emailLocalPart === emailLocalPart && user.emailDomainPart === emailDomainPart
         );
     };
 
     findByNickname = async (nickname) => {
-        return await this.findAll().find((user) => user.nickname === nickname);
+        return (await this.findAll()).find((user) => user.nickname === nickname);
     };
 }
 

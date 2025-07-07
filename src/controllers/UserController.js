@@ -10,12 +10,7 @@ class UserController {
     }
 
     postUser = async (req, res) => {
-        const { email, password, nickname } = req.body;
-
-        const result = await this.userService.createUser(
-            UserCreateRequestDto.create(email, password, nickname)
-        );
-
+        const result = await this.userService.createUser(UserCreateRequestDto.create(req.body));
         return ResponseHandler.created(res, result, '사용자가 성공적으로 생성되었습니다.');
     };
 

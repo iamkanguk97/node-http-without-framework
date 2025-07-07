@@ -3,7 +3,9 @@
 import dayjs from 'dayjs';
 import { BadRequestException } from '../exceptions/AppException.js';
 import { ERROR_MESSAGE } from '../exceptions/ErrorMessage.js';
-import { generateUniqueId } from '../utils/id-generator.util.js';
+import { JAVASCRIPT_TYPE_UNITS } from '../utils/constants/unit.constant.js';
+import IdGeneratorUtil from '../utils/id-generator.util.js';
+import bcrypt from 'bcrypt';
 
 export class UserEntity {
     /**
@@ -22,28 +24,27 @@ export class UserEntity {
      * @param {Object} data
      */
     constructor(data) {
+        const currentTime = dayjs();
+
         Object.assign(this, {
             ...data,
-            createdAt: data.createdAt || dayjs(),
-            updatedAt: data.updatedAt || dayjs(),
-            deletedAt: data.deletedAt || null
+            createdAt: data.createdAt ?? currentTime,
+            updatedAt: data.updatedAt ?? currentTime,
+            deletedAt: data.deletedAt ?? null
         });
     }
 
     static async create(email, password, nickname) {
         const emailParts = this.parseEmail(email);
-        const hashedPassword = password;
 
         return new UserEntity({
-            id: generateUniqueId(),
-            displayId: '',
+            id: IdGeneratorUtil.generateUniqueId(),
+            displayId: await IdGeneratorUtil.generateDisplayId(IdGeneratorUtil.DISPLAY_ID_TARGET.USER),
             emailLocalPart: emailParts.emailLocalPart,
             emailDomainPart: emailParts.emailDomainPart,
-            password: hashedPassword,
+            password: await this.hashPassword(password),
             nickname,
-            profileImageUrl: null,
-            createdAt: dayjs(),
-            updatedAt: dayjs()
+            profileImageUrl: null
         });
     }
 
@@ -58,14 +59,35 @@ export class UserEntity {
             nickname: userData.nickname,
             profileImageUrl: userData.profileImageUrl,
             createdAt: userData.createdAt,
-            updatedAt: userData.updatedAt
+            updatedAt: userData.updatedAt,
+            deletedAt: userData.deletedAt
         });
+    }
+
+    // JSON 형태로 변환 (기존 데이터 구조와 호환)
+    toJson() {
+        return {
+            id: this.id,
+            displayId: this.displayId,
+            emailLocalPart: this.emailLocalPart,
+            emailDomainPart: this.emailDomainPart,
+            password: this.password,
+            nickname: this.nickname,
+            profileImageUrl: this.profileImageUrl,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
+            deletedAt: this.deletedAt
+        };
+    }
+
+    static async hashPassword(password) {
+        return await bcrypt.hash(password, 10);
     }
 
     // 이메일 파싱하는 로직 -> 도메인 로직이 맞음
     // 정상적인 유저 생성을 위해서는 이메일 파싱이 필요함 -> 유저 도메인 로직
     static parseEmail(email) {
-        if (!email || typeof email !== 'string') {
+        if (!email || typeof email !== JAVASCRIPT_TYPE_UNITS.STRING) {
             throw new BadRequestException(ERROR_MESSAGE.IS_NOT_STRING);
         }
 
@@ -78,5 +100,10 @@ export class UserEntity {
             emailLocalPart: emailParts[0],
             emailDomainPart: emailParts[1]
         };
+    }
+
+    // 전체 이메일 주소 반환
+    getFullEmail() {
+        return `${this.emailLocalPart}@${this.emailDomainPart}`;
     }
 }

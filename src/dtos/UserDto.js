@@ -11,8 +11,8 @@ export class UserCreateRequestDto {
         this.password = PasswordValidator.validate(password);
     }
 
-    static create(email, password, nickname) {
-        return new UserCreateRequestDto(email, password, nickname);
+    static create(body) {
+        return new UserCreateRequestDto(body.email, body.password, body.nickname);
     }
 }
 
@@ -25,6 +25,11 @@ export class UserCreateResponseDto {
     }
 
     static fromEntity(userEntity) {
-        return;
+        return new UserCreateResponseDto(
+            userEntity.id,
+            userEntity.displayId,
+            userEntity.getFullEmail(),
+            userEntity.nickname
+        );
     }
 }

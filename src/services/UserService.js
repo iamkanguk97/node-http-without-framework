@@ -20,11 +20,13 @@ class UserService {
             this.checkNicknameUnique(createUserDto.nickname)
         ]);
 
-        const createdUserEntity = UserEntity.create(
+        const createdUserEntity = await UserEntity.create(
             createUserDto.email,
             createUserDto.password,
             createUserDto.nickname
         );
+
+        await this.userRepository.create(createdUserEntity);
 
         return UserCreateResponseDto.fromEntity(createdUserEntity);
     };
